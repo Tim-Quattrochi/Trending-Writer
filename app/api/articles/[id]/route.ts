@@ -37,7 +37,7 @@ export async function GET(
     .select("*")
     .eq("id", Number(id))
     .single();
-  console.log("data", data);
+
   if (error) {
     return NextResponse.json(
       { error: error.message },

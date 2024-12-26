@@ -33,9 +33,6 @@ const articleSchema = z.object({
 
       const charCount = Array.from(cleaned).length;
 
-      console.log("Cleaned text:", cleaned);
-      console.log("Character count:", charCount);
-
       return charCount > 200
         ? cleaned.slice(0, 300) + "..."
         : cleaned;
@@ -57,9 +54,6 @@ const articleSchema = z.object({
       );
 
       const charCount = Array.from(cleaned).length;
-
-      console.log("Cleaned text:", cleaned);
-      console.log("Character count:", charCount);
 
       // Truncate if needed
       return charCount > 160
@@ -120,8 +114,6 @@ export async function POST(req: Request) {
 
     const slug = generateSlug(object.title);
 
-    console.log("slug", slug);
-
     if (
       !object.meta_description ||
       object.meta_description.length > 160
@@ -175,21 +167,35 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const supabase = await createClient();
   const url = new URL(req.url);
-  const sortBy = url.searchParams.get("sortBy") || "created_at";
+  type SortKey = "created_at" | "published_at" | "title";
+  const sortParam = url.searchParams.get("sortBy") as SortKey | null;
+  const sortBy: SortKey =
+    sortParam &&
+    ["created_at", "published_at", "title"].includes(sortParam)
+      ? sortParam
+      : "created_at";
 
-  const validSortColumns = ["created_at"];
-  if (!validSortColumns.includes(sortBy)) {
-    return NextResponse.json(
-      { message: "Invalid sort parameter" },
-      { status: 400 }
-    );
-  }
+  const validSortColumns: Record<
+    SortKey,
+    { column: string; ascending: boolean }
+  > = {
+    created_at: { column: "created_at", ascending: false },
+    published_at: { column: "published_at", ascending: false },
+    title: { column: "title", ascending: true },
+  };
 
   try {
-    const { data: articles, error } = await supabase
-      .from("articles")
-      .select("*")
-      .order(sortBy, { ascending: false });
+    let query = supabase.from("articles").select("*");
+
+    if (sortBy && validSortColumns[sortBy]) {
+      query = query.order(validSortColumns[sortBy].column, {
+        ascending: validSortColumns[sortBy].ascending,
+      });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    const { data: articles, error } = await query;
 
     if (error) {
       console.error("Error fetching articles:", error);
@@ -198,7 +204,7 @@ export async function GET(req: Request) {
         { status: 500 }
       );
     }
-    console.log(articles);
+
     return NextResponse.json({ items: articles });
   } catch (error) {
     console.error("Error:", error);
