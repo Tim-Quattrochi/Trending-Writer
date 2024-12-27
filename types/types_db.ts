@@ -68,27 +68,33 @@ export type Database = {
       trends: {
         Row: {
           approx_traffic: string | null
+          created_at: string | null
           hash: string | null
           id: number
           news_items: string | null
           publication_date: string | null
           title: string | null
+          updated_at: string | null
         }
         Insert: {
           approx_traffic?: string | null
+          created_at?: string | null
           hash?: string | null
           id?: number
           news_items?: string | null
           publication_date?: string | null
           title?: string | null
+          updated_at?: string | null
         }
         Update: {
           approx_traffic?: string | null
+          created_at?: string | null
           hash?: string | null
           id?: number
           news_items?: string | null
           publication_date?: string | null
           title?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
