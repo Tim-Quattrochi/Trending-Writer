@@ -10,23 +10,37 @@ import {
   CardHeader,
   CardDescription,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { CalendarDaysIcon, HashIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  HashIcon,
+  FacebookIcon,
+  TagIcon,
+} from "lucide-react";
 import { Article } from "@/app/api/articles/article.types";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function generateStaticParams() {
-  const res = await fetch(`${baseUrl}/articles`);
-  const data = await res.json();
-  const articles: Article[] = data.items;
+  try {
+    console.log("Fetching articles from:", baseUrl);
+    const res = await fetch(`${baseUrl}/articles`);
+    if (!res.ok) {
+      console.error("Failed to fetch article slugs: ", res.status);
+      return [];
+    }
+    const data = await res.json();
+    const articles: Article[] = data.items;
 
-  const slugs = articles.map((article) => ({
-    slug: article.slug,
-  }));
-
-  return slugs;
+    return articles.map((article) => ({
+      slug: article.slug,
+    }));
+  } catch (error) {
+    console.error("Error in generateStaticParams:", error);
+    return [];
+  }
 }
 
 async function getArticle(slug: string): Promise<Article | null> {
@@ -63,43 +77,54 @@ export default async function Page({
   if (!article) {
     notFound();
   }
-  console.log(article);
+
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+    `https://trending-writer.vercel.app/articles/${slug}`
+  )}`;
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1>{article.title}</h1>
-      <Card className="overflow-hidden shadow-lg">
+    <Card className="max-w-4xl mx-auto my-8">
+      <CardHeader>
+        <CardTitle className="text-3xl font-bold mb-2">
+          {article.title}
+        </CardTitle>
+        <div className="flex items-center text-muted-foreground mb-4">
+          <CalendarIcon className="w-4 h-4 mr-2" />
+          <span>{article.created_at}</span>
+        </div>
+      </CardHeader>
+      <CardContent>
         {article.image_url && (
-          <div className="relative w-full h-64 md:h-96">
+          <div className="mb-6">
             <Image
               src={article.image_url}
               alt={article.title}
-              layout="fill"
-              objectFit="cover"
-              className="rounded-t-lg"
+              width={800}
+              height={400}
+              className="rounded-lg object-cover w-full"
             />
           </div>
         )}
-        <CardContent className="p-6">
-          <h1 className="text-3xl font-bold mb-4">{article.title}</h1>
-          <div className="flex items-center text-sm text-gray-500 mb-4">
-            <CalendarDaysIcon className="w-4 h-4 mr-2" />
-            <time dateTime={article.created_at}>
-              {article.created_at}
-            </time>
-          </div>
-          <div className="prose max-w-none"> {article.content}</div>
-        </CardContent>
-        <CardFooter className="bg-gray-50 p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <HashIcon className="w-4 h-4 text-gray-500" />
-            {article.meta_keywords?.map((keyword, index) => (
-              <Badge key={index} variant="secondary">
-                {keyword}
-              </Badge>
-            ))}
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+        <div className="prose max-w-none dark:prose-invert mb-6">
+          {article.content}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <TagIcon className="w-4 h-4 text-muted-foreground" />
+          {article?.meta_keywords?.map((keyword, index) => (
+            <Badge key={index} variant="secondary">
+              {keyword}
+            </Badge>
+          ))}
+        </div>
+        {/* <Button
+          variant="link"
+          onClick={() => window.open(fbShareUrl, "_blank")}
+          type="button"
+          className="flex items-center"
+        >
+          <FacebookIcon className="w-4 h-4 mr-2" />
+          Share on Facebook
+        </Button> */}
+      </CardContent>
+    </Card>
   );
 }
