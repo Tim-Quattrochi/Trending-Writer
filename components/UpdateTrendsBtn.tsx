@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
-export default function UpdateTrendsButton({}) {
+export default function UpdateTrendsButton() {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClick() {

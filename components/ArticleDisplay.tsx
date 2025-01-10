@@ -93,35 +93,35 @@ export function ArticleDisplay() {
    * @Tim-Quattrochi WIP - Post to Facebook
    */
 
-  //   const handlePostToFacebook = async (article: Article) => {
-  //     try {
-  //       const response = await fetch(`/api/post-to-facebook`, {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(article),
-  //       });
+  const handlePostToFacebook = async (article: Article) => {
+    try {
+      const response = await fetch(`/api/post-to-facebook`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(article),
+      });
 
-  //       if (!response.ok) {
-  //         throw new Error("Failed to post to Facebook");
-  //       }
+      if (!response.ok) {
+        throw new Error("Failed to post to Facebook");
+      }
 
-  //       toast({
-  //         title: "Posted to Facebook",
-  //         description:
-  //           "Your article has been successfully posted to Facebook.",
-  //       });
-  //     } catch (error) {
-  //       console.error("Error posting to Facebook:", error);
-  //       toast({
-  //         title: "Error posting to Facebook",
-  //         description:
-  //           "There was a problem posting your article to Facebook. Please try again.",
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   };
+      toast({
+        title: "Posted to Facebook",
+        description:
+          "Your article has been successfully posted to Facebook.",
+      });
+    } catch (error) {
+      console.error("Error posting to Facebook:", error);
+      toast({
+        title: "Error posting to Facebook",
+        description:
+          "There was a problem posting your article to Facebook. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Card className="w-full mt-8">

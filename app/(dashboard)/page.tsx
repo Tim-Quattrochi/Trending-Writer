@@ -2,6 +2,14 @@ import TrendList from "@/components/TrendList";
 import { TrendItem } from "@/types/trend";
 import { ArticleDisplay } from "@/components/ArticleDisplay";
 
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import { GetAllTrendsResult } from "./dashboard.types";
+import UpdateTrendsButton from "@/components/UpdateTrendsBtn";
+
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 async function updateTrends(): Promise<
@@ -24,49 +32,94 @@ async function updateTrends(): Promise<
   return { newItems: data.newItems };
 }
 
-async function getAllTrends(): Promise<TrendItem[]> {
-  const res = await fetch(`${baseUrl}/trends`);
-
-  const data = await res.json();
-
-  const trends: TrendItem[] = data.items.map((item: any) => {
-    return {
-      id: item.id,
-      title: item.title,
-      approxTraffic: item.approx_traffic,
-      pubDate: item.publication_date,
-      newsItems: item.news_items,
-      hash: item.hash,
-    };
-  });
+async function getAllTrends(
+  page: number = 1,
+  pageSize: number = 10
+): Promise<GetAllTrendsResult> {
+  const res = await fetch(
+    `${baseUrl}/trends?page=${page}&pageSize=${pageSize}`,
+    {
+      next: { tags: ["trends"] },
+    }
+  );
 
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.message || "Failed to fetch trends");
+    const errorMessage =
+      errorData.message || "Failed to retrieve trends";
+    console.error("Error fetching trends:", errorMessage); // Log the error
+    return { error: errorMessage };
   }
 
-  return trends;
+  const data = await res.json();
+
+  const trends: TrendItem[] = data.items.map((item: TrendItem) => ({
+    id: item.id,
+    title: item.title,
+    approx_traffic: item.approx_traffic,
+    publication_date: item.publication_date,
+    news_items: item.news_items,
+    hash: item.hash,
+  }));
+
+  return { trends, total: data.total };
 }
 
-export default async function Dashboard() {
-  const trendsData = await getAllTrends();
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const { page } = await searchParams;
+  const pageIdx = Number(page) || 1;
+  const pageSize = 10;
 
-  console.log("trendsData", trendsData);
+  const result = await getAllTrends(pageIdx, pageSize);
+
+  if ("error" in result) {
+    console.error(result.error);
+    return (
+      <div className="container mx-auto py-8">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{result.error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  const { trends, total } = result;
+  if (trends.length === 0) {
+    await updateTrends();
+    return (
+      <div className="container mx-auto py-8">
+        <Alert>
+          <AlertTitle>No Trends Found</AlertTitle>
+          <AlertDescription>
+            There are currently no trending topics. Please check back
+            later or click the &quot;Check for new Trends&quot; button
+            to manually refresh.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">
-        {" "}
+      <h1 className="text-3xl font-bold mb-8 flex items-center gap-4">
+        <UpdateTrendsButton />
         Trending Topics Dashboard
       </h1>
-      {trendsData ? (
-        <>
-          <TrendList trends={trendsData} />
-          <ArticleDisplay />
-        </>
-      ) : (
-        <div>Error: {trendsData.error}</div>
-      )}
+
+      <TrendList
+        trends={trends}
+        currentPage={pageIdx}
+        totalItems={total}
+        pageSize={pageSize}
+      />
+
+      <ArticleDisplay />
     </div>
   );
 }

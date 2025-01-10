@@ -35,38 +35,42 @@ type SortByOptions =
   | "published_at"
   | "is_published";
 
-export default function ArticleList() {
-  const [articles, setArticles] = useState<Article[]>([]);
+export default function ArticleList({ articles }) {
+  // const [articles, setArticles] = useState<Article[]>([]);
   const [sortBy, setSortBy] = useState<SortByOptions>("created_at");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `/api/articles?sortBy=${sortBy}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch articles");
-        }
-        const data = await response.json();
-        setArticles(data);
-      } catch (error) {
-        console.error("Error fetching articles:", error);
-        toast({
-          title: "Error fetching articles",
-          description:
-            "There was a problem loading the articles. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchArticles();
-  }, [sortBy]);
+  // useEffect(() => {
+  //   const fetchArticles = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const response = await fetch(
+  //         `/api/articles?sortBy=${sortBy}`
+  //       );
+  //       if (!response.ok) {
+  //         throw new Error("Failed to fetch articles");
+  //       }
+  //       const data = await response.json();
+  //       setArticles(data);
+  //     } catch (error) {
+  //       console.error("Error fetching articles:", error);
+  //       toast({
+  //         title: "Error fetching articles",
+  //         description:
+  //           "There was a problem loading the articles. Please try again.",
+  //         variant: "destructive",
+  //       });
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   fetchArticles();
+  // }, [sortBy]);
+
+  // useEffect(() => {
+  //   articles();
+  // }, []);
 
   const handleSelectChange: ChangeEventHandler<HTMLSelectElement> = (
     event
@@ -107,7 +111,7 @@ export default function ArticleList() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {articles?.items?.map((article: Article) => (
+            {articles?.map((article: Article) => (
               <ArticleCard key={article.id} article={article} />
             ))}
           </div>

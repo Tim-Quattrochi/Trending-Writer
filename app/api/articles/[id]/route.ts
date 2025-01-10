@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
+  console.log("params: ", params);
   const supabase = await createClient();
   const { id } = params;
   const { title, content } = await request.json();
@@ -27,18 +29,23 @@ export async function PUT(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ slug: string }> }
 ) {
+  const params = await props.params;
   const supabase = await createClient();
-  const { id } = params;
+
+  console.log("PARAMS: ", params);
 
   const { data, error } = await supabase
     .from("articles")
     .select("*")
-    .eq("id", Number(id))
-    .single();
+    .eq(
+      "slug",
+      "zion-williamson-stats-exploring-the-powerhouses-impact-on-the-nba"
+    );
 
   if (error) {
+    console.log("ERROR: ", error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

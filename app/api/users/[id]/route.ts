@@ -1,10 +1,8 @@
 import { type NextRequest } from "next/server";
 import { createClient } from "@/supabase/server";
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const id = params.id;
 
   const supabase = await createClient();

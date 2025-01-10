@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/types_db.ts"
+    "update-types": "npx supabase gen types typescript --project-id \"$SUPABASE_PROJECT_REF\" > database.types.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.0.12",
@@ -23,6 +23,7 @@
     "@radix-ui/react-toast": "^1.2.4",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
+    "@tailwindcss/typography": "^0.5.16",
     "ai": "^4.0.22",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

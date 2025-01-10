@@ -65,6 +65,21 @@ export type Database = {
           },
         ]
       }
+      trend_updates: {
+        Row: {
+          id: number
+          last_checked_at: string
+        }
+        Insert: {
+          id?: number
+          last_checked_at?: string
+        }
+        Update: {
+          id?: number
+          last_checked_at?: string
+        }
+        Relationships: []
+      }
       trends: {
         Row: {
           approx_traffic: string | null

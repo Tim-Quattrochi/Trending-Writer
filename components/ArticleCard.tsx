@@ -6,21 +6,15 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ThumbsUp, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  likes?: number;
-  comments?: number;
-  keyWords?: string;
-}
+import { Article } from "@/app/api/articles/article.types";
 
 interface Comment {
   id: string;
@@ -126,17 +120,21 @@ export default function ArticleCard({
   //       setIsLoading(false);
   //     }
   //   };
-
+  console.log(article);
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          <Link href={`/articles/${article.id}`}>
+          <Link href={`/articles/${article.slug}`}>
             {article.title}
           </Link>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* <ReactMarkdown remarkPlugins={[remarkGfm]}> */}
+
+        {/* </ReactMarkdown> */}
+
         <p className="line-clamp-3">{article.content}</p>
         {isExpanded && (
           <div className="mt-4">

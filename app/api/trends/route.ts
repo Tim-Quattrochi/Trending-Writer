@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { TrendItem } from "@/types/trend";
 
 async function fetchRSS(url: string) {
-  const response = await fetch(url);
+  const response = await fetch(url, { next: { tags: ["trends"] } });
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
@@ -94,79 +94,142 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  // Configuration
-  const rssUrl = "https://trends.google.com/trending/rss?geo=US";
 
-  try {
-    const rssContent = await fetchRSS(rssUrl);
-    const newItems = await parseRSS(rssContent);
+  const { data: lastUpdated, error: lastUpdatedError } =
+    await supabase.from("trend_updates").select("last_checked_at");
 
-    const newTrends = [];
+  if (lastUpdatedError) {
+    console.error(
+      "Error fetching last updated time:",
+      lastUpdatedError
+    );
+    return NextResponse.json(
+      { error: "Error fetching last updated time" },
+      { status: 500 }
+    );
+  }
 
-    for (const item of newItems) {
-      const { data: existingTrend, error: hashError } = await supabase
-        .from("trends")
-        .select("hash")
-        .eq("hash", item.Hash)
-        .single();
+  const lastCheckedAt = lastUpdated[0]
+    ? new Date(lastUpdated[0].last_checked_at)
+    : null;
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-      if (hashError && hashError.code !== "PGRST116") {
-        // "PGRST116" means no data found
-        console.error("Error fetching existing trend:", hashError);
-        throw new Error("Error fetching existing trend");
-      }
+  if (!lastCheckedAt || lastCheckedAt < oneHourAgo) {
+    const rssUrl = "https://trends.google.com/trending/rss?geo=US";
 
-      if (!existingTrend) {
-        const { error: insertError } = await supabase
-          .from("trends")
-          .insert([
-            {
+    let updatedTrendsCount = 0;
+    let insertedTrendsCount = 0;
+
+    try {
+      const rssContent = await fetchRSS(rssUrl);
+      const newItems = await parseRSS(rssContent);
+
+      const newTrends = [];
+
+      for (const item of newItems) {
+        const { data: existingTrend, error: hashError } =
+          await supabase
+            .from("trends")
+            .select("hash")
+            .eq("hash", item.Hash)
+            .single();
+
+        if (hashError && hashError.code !== "PGRST116") {
+          // "PGRST116" means no data found
+          console.error("Error fetching existing trend:", hashError);
+          throw new Error("Error fetching existing trend");
+        }
+
+        if (!existingTrend) {
+          const { error: insertError } = await supabase
+            .from("trends")
+            .insert([
+              {
+                title: item.Title,
+                approx_traffic: item["Approx Traffic"],
+                publication_date: item["Publication Date"],
+                news_items: item["News Items"],
+                hash: item.Hash,
+              },
+            ]);
+
+          if (insertError) {
+            console.error("Error inserting new trend:", insertError);
+            throw new Error("Error inserting new trend");
+          }
+
+          newTrends.push(item);
+          insertedTrendsCount++;
+        } else {
+          const { error: updateError } = await supabase
+            .from("trends")
+            .update({
               title: item.Title,
               approx_traffic: item["Approx Traffic"],
               publication_date: item["Publication Date"],
               news_items: item["News Items"],
-              hash: item.Hash,
-            },
-          ]);
-
-        if (insertError) {
-          console.error("Error inserting new trend:", insertError);
-          throw new Error("Error inserting new trend");
+            })
+            .eq("hash", item.Hash);
+          if (updateError) {
+            console.error(
+              "Error updating existing trend:",
+              updateError
+            );
+            throw new Error("Error updating existing trend");
+          }
+          updatedTrendsCount++;
         }
-
-        newTrends.push(item);
       }
+      console.log("new trends/: ", newTrends);
+      return NextResponse.json({
+        message: "Successfully updated trending news.",
+        addedTrends: newTrends,
+        insertedTrendsCount,
+        updatedTrendsCount,
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      return NextResponse.json(
+        {
+          message: "Error updating trending news.",
+        },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json({
-      message: "Successfully updated trending news.",
-      addedTrends: newTrends,
-    });
-  } catch (error) {
-    console.error("Error:", error);
-    return NextResponse.json(
-      {
-        message: "Error updating trending news.",
-      },
-      { status: 500 }
-    );
   }
 }
 
 export async function GET(req: Request): Promise<NextResponse> {
   const supabase = await createClient();
+  const url = new URL(req.url);
+  const page = Number(url.searchParams.get("page")) || 1;
+  const limit = Number(url.searchParams.get("limit")) || 10;
+  const start = (page - 1) * limit;
+  const end = start + limit - 1;
 
   try {
-    const { data: trends, error } = await supabase
+    const {
+      data: trends,
+      error,
+      count,
+    } = await supabase
       .from("trends")
-      .select("*");
+      .select("*", { count: "exact" })
+      .range(start, end)
+      .order("publication_date", { ascending: false });
 
     if (error) {
       console.error("Error fetching trends:", error);
       throw new Error("Error fetching trends");
     }
 
-    return NextResponse.json({ items: trends });
+    return NextResponse.json({
+      items: trends,
+      total: count,
+      page,
+      limit,
+    });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
