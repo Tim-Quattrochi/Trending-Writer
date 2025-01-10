@@ -6,8 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Textarea } from "./ui/textarea";
@@ -175,11 +173,12 @@ export default function ArticleCard({
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="ghost" size="sm">
-          <ThumbsUp className="mr-2 h-4 w-4" /> {article.likes}
+          <ThumbsUp className="mr-2 h-4 w-4" />
+          {/* {article.likes} */}
         </Button>
         <Button variant="ghost" size="sm">
           <MessageSquare className="mr-2 h-4 w-4" />{" "}
-          {article.comments}
+          {/* {article.comments} */}
         </Button>
       </CardFooter>
     </Card>

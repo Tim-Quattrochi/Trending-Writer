@@ -45,7 +45,7 @@ async function getArticle(slug: string): Promise<Article | null> {
   }
 
   const article: Article[] = data.items.filter(
-    (article) => article.slug === slug
+    (article: Article) => article.slug === slug
   );
 
   return article[0];

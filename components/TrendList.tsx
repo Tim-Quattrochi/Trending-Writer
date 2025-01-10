@@ -96,7 +96,7 @@ export default function TrendList({
     const halfVisible = Math.floor(maxVisiblePages / 2);
 
     let startPage = Math.max(currentPage - halfVisible, 1);
-    let endPage = Math.min(
+    const endPage = Math.min(
       startPage + maxVisiblePages - 1,
       totalPages
     );
@@ -406,7 +406,7 @@ export default function TrendList({
                 <DialogTitle>Edit Trend</DialogTitle>
                 <DialogDescription>
                   Make changes to the trend here. Click save when
-                  you're done.
+                  you&apos;re done.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSaveEdit}>
