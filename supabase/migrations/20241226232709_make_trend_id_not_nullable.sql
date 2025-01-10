@@ -1,0 +1,4 @@
+DELETE FROM articles WHERE trend_id IS NULL;
+
+ALTER TABLE articles
+ALTER COLUMN trend_id SET NOT NULL;s

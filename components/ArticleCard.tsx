@@ -12,15 +12,7 @@ import { Textarea } from "./ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { ThumbsUp, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  likes?: number;
-  comments?: number;
-  keyWords?: string;
-}
+import { Article } from "@/app/api/articles/article.types";
 
 interface Comment {
   id: string;
@@ -126,17 +118,21 @@ export default function ArticleCard({
   //       setIsLoading(false);
   //     }
   //   };
-
+  console.log(article);
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          <Link href={`/articles/${article.id}`}>
+          <Link href={`/articles/${article.slug}`}>
             {article.title}
           </Link>
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* <ReactMarkdown remarkPlugins={[remarkGfm]}> */}
+
+        {/* </ReactMarkdown> */}
+
         <p className="line-clamp-3">{article.content}</p>
         {isExpanded && (
           <div className="mt-4">
@@ -177,11 +173,12 @@ export default function ArticleCard({
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="ghost" size="sm">
-          <ThumbsUp className="mr-2 h-4 w-4" /> {article.likes}
+          <ThumbsUp className="mr-2 h-4 w-4" />
+          {/* {article.likes} */}
         </Button>
         <Button variant="ghost" size="sm">
           <MessageSquare className="mr-2 h-4 w-4" />{" "}
-          {article.comments}
+          {/* {article.comments} */}
         </Button>
       </CardFooter>
     </Card>

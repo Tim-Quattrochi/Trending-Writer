@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 
 export async function signInWithFacebook() {
   const supabase = await createClient();
-  const origin = headers().get("origin");
+  const origin = (await headers()).get("origin");
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "facebook",
@@ -19,6 +19,6 @@ export async function signInWithFacebook() {
   }
 
   if (data.url) {
-    redirect(data.url); // use the redirect API for your server framework
+    redirect(data.url);
   }
 }

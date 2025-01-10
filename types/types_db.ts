@@ -22,7 +22,7 @@ export type Database = {
           slug: string | null
           summary: string | null
           title: string | null
-          trend_id: number | null
+          trend_id: number
           updated_at: string | null
         }
         Insert: {
@@ -37,7 +37,7 @@ export type Database = {
           slug?: string | null
           summary?: string | null
           title?: string | null
-          trend_id?: number | null
+          trend_id: number
           updated_at?: string | null
         }
         Update: {
@@ -52,7 +52,7 @@ export type Database = {
           slug?: string | null
           summary?: string | null
           title?: string | null
-          trend_id?: number | null
+          trend_id?: number
           updated_at?: string | null
         }
         Relationships: [
@@ -65,30 +65,51 @@ export type Database = {
           },
         ]
       }
+      trend_updates: {
+        Row: {
+          id: number
+          last_checked_at: string
+        }
+        Insert: {
+          id?: number
+          last_checked_at?: string
+        }
+        Update: {
+          id?: number
+          last_checked_at?: string
+        }
+        Relationships: []
+      }
       trends: {
         Row: {
           approx_traffic: string | null
+          created_at: string | null
           hash: string | null
           id: number
           news_items: string | null
           publication_date: string | null
           title: string | null
+          updated_at: string | null
         }
         Insert: {
           approx_traffic?: string | null
+          created_at?: string | null
           hash?: string | null
           id?: number
           news_items?: string | null
           publication_date?: string | null
           title?: string | null
+          updated_at?: string | null
         }
         Update: {
           approx_traffic?: string | null
+          created_at?: string | null
           hash?: string | null
           id?: number
           news_items?: string | null
           publication_date?: string | null
           title?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
