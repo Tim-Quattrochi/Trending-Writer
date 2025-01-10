@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/supabase/server";
 import crypto from "crypto";
 import { TrendItem } from "@/types/trend";
+import { revalidatePath } from "next/cache";
 
 async function fetchRSS(url: string) {
   const response = await fetch(url, { next: { tags: ["trends"] } });
@@ -161,6 +162,7 @@ export async function POST(req: Request) {
 
           newTrends.push(item);
           insertedTrendsCount++;
+          revalidatePath("/", "layout");
         } else {
           const { error: updateError } = await supabase
             .from("trends")
@@ -181,6 +183,7 @@ export async function POST(req: Request) {
           updatedTrendsCount++;
         }
       }
+      revalidatePath("/", "layout");
       console.log("new trends/: ", newTrends);
       return NextResponse.json({
         message: "Successfully updated trending news.",
