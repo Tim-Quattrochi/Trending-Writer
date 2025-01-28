@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function UpdateTrendsButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,10 +38,10 @@ export default function UpdateTrendsButton() {
 
   return (
     <Button
-      type="button"
       onClick={handleClick}
       disabled={isLoading}
-      className="flex items-center gap-4"
+      variant="ghost"
+      className="font-bold text-md mx-auto text-center"
     >
       {isLoading && <Loader2 className="animate-spin" />}
       {isLoading ? "Loading..." : "Check for new Trends"}

@@ -5,6 +5,8 @@ export interface TrendItem {
   publication_date: string;
   news_items: string;
   hash: string;
+  stored_image_url?: string | null;
+  image_source?: string | null;
 }
 export interface NewsItem {
   title: string;
