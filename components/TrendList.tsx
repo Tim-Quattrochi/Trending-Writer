@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, JSX } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import UpdateTrendsButton from "./UpdateTrendsBtn";
 import {
   Edit,
   Trash2,
@@ -282,9 +283,10 @@ export default function TrendList({
       });
     }
   };
-  console.log(trends && trends);
+
   return (
-    <Card className="w-full">
+    <Card className="w-full p-4">
+      <UpdateTrendsButton />
       <CardHeader>
         <CardTitle>Trending Topics</CardTitle>
         <CardDescription>
@@ -297,20 +299,18 @@ export default function TrendList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>id</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Traffic</TableHead>
               <TableHead>Date</TableHead>
 
               <TableHead>News Items</TableHead>
-              <TableHead>Generate Article</TableHead>
+
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {trends.map((trend) => (
+            {trends?.map((trend) => (
               <TableRow key={trend.id}>
-                <TableCell>{trend.id}</TableCell>
                 <TableCell>{trend.title}</TableCell>
                 <TableCell>{trend.approx_traffic}</TableCell>
                 <TableCell>

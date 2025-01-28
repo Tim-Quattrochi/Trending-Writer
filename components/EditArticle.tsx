@@ -9,13 +9,7 @@ import {
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  trendId: string;
-}
+import { Article } from "@/app/api/articles/article.types";
 
 interface EditArticleProps {
   article: Article;
