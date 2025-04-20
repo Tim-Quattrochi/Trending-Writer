@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  serverRuntimeConfig: {
+    functions: {
+      maxDuration: 60,
+    },
+  },
 };
 
 export default nextConfig;
