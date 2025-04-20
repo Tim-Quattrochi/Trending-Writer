@@ -55,6 +55,8 @@ import {
 } from "@/components/ui/table";
 import { TrendItem } from "@/types/trend";
 
+import { ARTICLE_GENERATED_EVENT } from "./ArticleDisplay";
+
 interface TrendListProps {
   trends: TrendItem[];
   currentPage: number;
@@ -186,28 +188,25 @@ export default function TrendList({
   const handleGenerateArticle = async (trend: TrendItem) => {
     setGeneratingArticle(trend.id);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_VERCEL_URL}/articles`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      const response = await fetch(`/api/articles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          trend_id: trend.id,
+          title: trend.title,
+          trendData: {
             trend_id: trend.id,
             title: trend.title,
-            trendData: {
-              trend_id: trend.id,
-              title: trend.title,
-              approx_traffic: trend.approx_traffic,
-              published_at: trend.publication_date,
-              news_items: trend.news_items,
-            },
-            image_url: null,
-            is_published: false,
-          }),
-        }
-      );
+            approx_traffic: trend.approx_traffic,
+            published_at: trend.publication_date,
+            news_items: trend.news_items,
+          },
+          image_url: null,
+          is_published: false,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to generate article");
@@ -219,12 +218,15 @@ export default function TrendList({
         title: "Article generated successfully",
         description: "The AI-generated article is now available.",
       });
+
+      const event = new CustomEvent(ARTICLE_GENERATED_EVENT);
+      window.dispatchEvent(event);
     } catch (error) {
       console.error("Error generating article:", error);
       toast({
         title: "Error generating article",
         description: `Failed to generate article: ${
-          error.message || error
+          error instanceof Error ? error.message : String(error)
         }`,
       });
     } finally {
