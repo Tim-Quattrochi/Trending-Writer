@@ -23,7 +23,9 @@ export default function ErrorPage({
   const router = useRouter();
 
   useEffect(() => {
-    console.error(error);
+    if (error) {
+      console.error(error);
+    }
   }, [error]);
 
   return (
@@ -40,7 +42,8 @@ export default function ErrorPage({
             We apologize for the inconvenience. An unexpected error
             has occurred.
           </p>
-          {error.message && (
+
+          {error && error.message && (
             <p
               className="mt-4 p-4 bg-muted rounded-md text-sm"
               role="alert"
