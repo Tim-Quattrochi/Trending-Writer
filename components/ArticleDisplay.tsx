@@ -6,13 +6,9 @@ import { ScrollArea } from "./ui/scroll-area";
 import { EditArticle } from "./EditArticle";
 import { useToast } from "@/hooks/use-toast";
 import { Edit } from "lucide-react";
+import { Article } from "@/app/api/articles/article.types";
 
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  trendId: string;
-}
+export const ARTICLE_GENERATED_EVENT = "article-generated";
 
 interface ArticlesResponse {
   items: Article[];
@@ -29,20 +25,37 @@ export function ArticleDisplay() {
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const response = await fetch("/api/articles");
-        if (!response.ok) {
-          throw new Error("Failed to fetch articles");
-        }
-        const data: ArticlesResponse = await response.json();
-        setArticles(data);
-      } catch (error) {
-        console.error("Error fetching articles:", error);
+  const fetchArticles = async () => {
+    try {
+      const response = await fetch("/api/articles");
+      if (!response.ok) {
+        throw new Error("Failed to fetch articles");
       }
-    };
+      const data: ArticlesResponse = await response.json();
+      setArticles(data);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchArticles();
+
+    const handleArticleGenerated = () => {
+      fetchArticles();
+    };
+
+    window.addEventListener(
+      ARTICLE_GENERATED_EVENT,
+      handleArticleGenerated
+    );
+
+    return () => {
+      window.removeEventListener(
+        ARTICLE_GENERATED_EVENT,
+        handleArticleGenerated
+      );
+    };
   }, []);
 
   const handleSaveArticle = async (updatedArticle: Article) => {

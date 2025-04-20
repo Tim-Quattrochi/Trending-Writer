@@ -2,6 +2,7 @@ import ArticleList from "@/components/ArticleList";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -25,7 +26,6 @@ const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function generateStaticParams() {
   try {
-    console.log("Fetching articles from:", baseUrl);
     const res = await fetch(`${baseUrl}/articles`);
     if (!res.ok) {
       console.error("Failed to fetch article slugs: ", res.status);
@@ -58,11 +58,9 @@ async function getArticle(slug: string): Promise<Article | null> {
     return null;
   }
 
-  const article: Article[] = data.items.filter(
-    (article: Article) => article.slug === slug
-  );
+  const article: Article = data.items;
 
-  return article[0];
+  return article;
 }
 
 export default async function Page({
@@ -70,26 +68,32 @@ export default async function Page({
 }: {
   params: { slug: string };
 }) {
+  //https://nextjs.org/docs/messages/sync-dynamic-apis
   const { slug } = await params;
-
   const article = await getArticle(slug);
 
   if (!article) {
     notFound();
   }
 
+  const parsedContent = article.content
+    ? JSON.parse(article.content)
+    : { sections: [] };
+
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
     `https://trending-writer.vercel.app/articles/${slug}`
   )}`;
   return (
-    <Card className="max-w-4xl mx-auto my-8">
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold mb-2">
+    <Card className="max-w-4xl mx-auto my-8 bg-card text-card-foreground shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-200 ease-in-out">
+      <CardHeader className="p-6 border-b border-gray-200">
+        <CardTitle className="text-3xl font-bold mb-2 text-primary">
           {article.title}
         </CardTitle>
         <div className="flex items-center text-muted-foreground mb-4">
           <CalendarIcon className="w-4 h-4 mr-2" />
-          <span>{article.created_at}</span>
+          <span>
+            {new Date(article.created_at).toLocaleDateString()}
+          </span>
         </div>
       </CardHeader>
       <CardContent>
@@ -115,15 +119,15 @@ export default async function Page({
             </Badge>
           ))}
         </div>
-        {/* <Button
-          variant="link"
-          onClick={() => window.open(fbShareUrl, "_blank")}
+        <a
+          href={fbShareUrl}
+          // onClick={() => window.open(fbShareUrl, "_blank")}
           type="button"
-          className="flex items-center"
+          className="flex items-center  text-primary hover:text-primary-foreground transition-colors duration-200 ease-in-out"
         >
           <FacebookIcon className="w-4 h-4 mr-2" />
           Share on Facebook
-        </Button> */}
+        </a>
       </CardContent>
     </Card>
   );

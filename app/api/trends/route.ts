@@ -22,6 +22,7 @@ interface RssItem {
   "ht:approx_traffic"?: string;
   pubDate: string;
   "ht:news_item"?: HtNewsItem | HtNewsItem[];
+  "ht:picture"?: string | null;
 }
 
 interface ParsedXml {
@@ -37,6 +38,7 @@ interface ParsedItem {
   "Approx Traffic": string;
   "Publication Date": string;
   "News Items": string;
+  Picture: string | null;
   Hash: string;
 }
 
@@ -58,6 +60,7 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
     const title = item.title;
     const approxTraffic = item["ht:approx_traffic"] || "N/A";
     const pubDate = item.pubDate;
+    const picture = item["ht:picture"] || null;
 
     const newsItems: string[] = [];
     if (Array.isArray(item["ht:news_item"])) {
@@ -85,6 +88,7 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
       Title: title,
       "Approx Traffic": approxTraffic,
       "Publication Date": pubDateTimestamp.toISOString(),
+      Picture: picture,
       "News Items": newsItemsCombined,
       Hash: itemHash,
     });
@@ -152,11 +156,15 @@ export async function POST(req: Request) {
                 publication_date: item["Publication Date"],
                 news_items: item["News Items"],
                 hash: item.Hash,
+                stored_image_url: item.Picture,
               },
             ]);
 
           if (insertError) {
-            console.error("Error inserting new trend:", insertError);
+            console.error(
+              "Error inserting new trend:",
+              insertError.message
+            );
             throw new Error("Error inserting new trend");
           }
 
@@ -184,7 +192,7 @@ export async function POST(req: Request) {
         }
       }
       revalidatePath("/", "layout");
-      console.log("new trends/: ", newTrends);
+
       return NextResponse.json({
         message: "Successfully updated trending news.",
         addedTrends: newTrends,
@@ -206,6 +214,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request): Promise<NextResponse> {
   const supabase = await createClient();
   const url = new URL(req.url);
+
   const page = Number(url.searchParams.get("page")) || 1;
   const limit = Number(url.searchParams.get("limit")) || 10;
   const start = (page - 1) * limit;

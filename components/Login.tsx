@@ -1,5 +1,7 @@
 "use client";
 
+// WIP not complete.
+
 import { createClient } from "@/supabase/client";
 
 export default function Login() {
@@ -14,10 +16,8 @@ export default function Login() {
 
     if (error) {
       console.error("Error during Facebook login:", error);
-      // Handle error, e.g., display an error message to the user
     } else {
       console.log("Successfully initiated login flow");
-      // Redirect or update UI state as needed
     }
   };
 

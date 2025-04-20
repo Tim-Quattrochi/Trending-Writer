@@ -6,7 +6,7 @@ export async function PUT(
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
-  console.log("params: ", params);
+
   const supabase = await createClient();
   const { id } = params;
   const { title, content } = await request.json();
@@ -34,8 +34,6 @@ export async function GET(
   const params = await props.params;
   const supabase = await createClient();
 
-  console.log("PARAMS: ", params);
-
   const { data, error } = await supabase
     .from("articles")
     .select("*")
@@ -45,7 +43,6 @@ export async function GET(
     );
 
   if (error) {
-    console.log("ERROR: ", error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

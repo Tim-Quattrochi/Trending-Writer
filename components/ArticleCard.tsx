@@ -118,7 +118,7 @@ export default function ArticleCard({
   //       setIsLoading(false);
   //     }
   //   };
-  console.log(article);
+
   return (
     <Card>
       <CardHeader>
