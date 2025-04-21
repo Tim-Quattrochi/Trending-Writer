@@ -171,21 +171,27 @@ export function ArticleDisplay() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to post to Facebook");
+        throw new Error(
+          errorData.error || "Failed to post to Facebook"
+        );
       }
 
       const data = await response.json();
-      
+
       toast({
         title: "Posted to Facebook",
-        description: "Your article has been successfully posted to Facebook.",
+        description:
+          "Your article has been successfully posted to Facebook.",
       });
     } catch (error) {
       console.error("Error posting to Facebook:", error);
       toast({
         title: "Error posting to Facebook",
-        description:
-          `${error instanceof Error ? error.message : "There was a problem posting your article to Facebook. Please try again."}`,
+        description: `${
+          error instanceof Error
+            ? error.message
+            : "There was a problem posting your article to Facebook. Please try again."
+        }`,
         variant: "destructive",
       });
     }
@@ -305,14 +311,18 @@ export function ArticleDisplay() {
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        router.push(`/articles/${selectedArticle.slug}`)
+                        router.push(
+                          `/articles/${selectedArticle.slug}`
+                        )
                       }
                     >
                       Read Full Article
                     </Button>
                     {selectedArticle && (
                       <Button
-                        onClick={() => handlePostToFacebook(selectedArticle)}
+                        onClick={() =>
+                          handlePostToFacebook(selectedArticle)
+                        }
                         variant="default"
                         size="sm"
                       >
