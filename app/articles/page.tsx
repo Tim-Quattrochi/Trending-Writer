@@ -1,6 +1,11 @@
 import { Metadata } from "next";
 import ArticleList from "@/components/ArticleList";
 import { getAllArticles } from "../(dashboard)/actions";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 export const metadata: Metadata = {
   title: "Articles | Trending Writer",
@@ -13,9 +18,11 @@ export default async function ArticlesPage() {
 
   if (response.error) {
     return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8">Error:</h1>
-        <p>{response.error}</p>
+      <div className="container mx-auto py-8 px-4 md:px-6">
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{response.error}</AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -23,7 +30,7 @@ export default async function ArticlesPage() {
   const { data } = response;
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4 md:px-6">
       <h1 className="text-3xl font-bold mb-8">Trending Articles</h1>
       <ArticleList articles={data} />
     </div>

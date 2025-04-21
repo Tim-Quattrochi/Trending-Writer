@@ -1,13 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { Loader2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UpdateTrendsButton() {
   const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
+  const { toast } = useToast();
 
   async function handleClick() {
     setIsLoading(true);
@@ -20,15 +23,44 @@ export default function UpdateTrendsButton() {
       );
 
       if (!response.ok) {
-        return (
-          <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              Something went wrong ...
-            </AlertDescription>
-          </Alert>
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to update trends"
         );
       }
+      const data = await response.json();
+
+      const getUpdateDescription = (data: any) => {
+        const newCount = data.insertedTrendsCount || 0;
+        const updatedCount = data.updatedTrendsCount || 0;
+
+        if (newCount === 0 && updatedCount === 0) {
+          return "No new or updated trends found.";
+        } else if (newCount > 0 && updatedCount > 0) {
+          return `${newCount} new ${
+            newCount === 1 ? "trend" : "trends"
+          } added and ${updatedCount} ${
+            updatedCount === 1 ? "trend" : "trends"
+          } updated.`;
+        } else if (newCount > 0) {
+          return `${newCount} new ${
+            newCount === 1 ? "trend" : "trends"
+          } added.`;
+        } else {
+          return `${updatedCount} ${
+            updatedCount === 1 ? "trend" : "trends"
+          } updated.`;
+        }
+      };
+
+      toast({
+        title: "Trends Updated",
+        description: getUpdateDescription(data),
+        variant:
+          data.insertedTrendsCount > 0 ? "default" : "destructive",
+      });
+
+      router.refresh();
     } catch (error) {
       console.log(error);
     } finally {
@@ -38,13 +70,16 @@ export default function UpdateTrendsButton() {
 
   return (
     <Button
+      variant="outline"
+      size="sm"
       onClick={handleClick}
       disabled={isLoading}
-      variant="ghost"
-      className="font-bold text-md mx-auto text-center"
+      className="gap-2"
     >
-      {isLoading && <Loader2 className="animate-spin" />}
-      {isLoading ? "Loading..." : "Check for new Trends"}
+      <RefreshCw
+        className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+      />
+      {isLoading ? "Updating..." : "Check for new Trends"}
     </Button>
   );
 }

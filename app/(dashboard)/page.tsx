@@ -1,6 +1,13 @@
 import TrendList from "@/components/TrendList";
 import { TrendItem } from "@/types/trend";
 import { ArticleDisplay } from "@/components/ArticleDisplay";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 import {
   Alert,
@@ -106,20 +113,37 @@ export default async function Dashboard({
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8 flex items-center gap-4">
-        <UpdateTrendsButton />
-        Trending Topics Dashboard
-      </h1>
+    <div className="container mx-auto py-8 px-4 md:px-6">
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold mb-8 flex items-center gap-4">
+            <UpdateTrendsButton />
+            Trending Topics Dashboard
+          </h1>
+        </div>
+        <Separator />
+        <Tabs defaultValue="trends" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="trends">Trending Topics</TabsTrigger>
+            <TabsTrigger value="articles">
+              Generated Articles
+            </TabsTrigger>
+          </TabsList>
 
-      <TrendList
-        trends={trends}
-        currentPage={pageIdx}
-        totalItems={total}
-        pageSize={pageSize}
-      />
+          <TabsContent value="trends" className="space-y-6">
+            <TrendList
+              trends={trends}
+              currentPage={pageIdx}
+              totalItems={total}
+              pageSize={pageSize}
+            />
+          </TabsContent>
 
-      <ArticleDisplay />
+          <TabsContent value="articles">
+            <ArticleDisplay />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

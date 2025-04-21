@@ -1,26 +1,20 @@
 import ArticleList from "@/components/ArticleList";
 import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { ClientMarkdown } from "@/components/Markdown";
+
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardTitle,
-  CardHeader,
-  CardDescription,
-} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import {
   CalendarIcon,
-  HashIcon,
-  FacebookIcon,
-  TagIcon,
+  Clock,
+  Facebook,
+  Share2,
+  Tag,
+  ArrowLeft,
 } from "lucide-react";
-import { Article } from "@/app/api/articles/article.types";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -44,23 +38,36 @@ export async function generateStaticParams() {
 }
 
 async function getArticle(slug: string): Promise<Article | null> {
-  const res = await fetch(`${baseUrl}/articles?slug=${slug}`);
+  try {
+    const res = await fetch(`${baseUrl}/articles?slug=${slug}`);
 
-  if (!res.ok) {
-    console.error("Error fetching article: ", res.status);
+    if (!res.ok) {
+      console.error("Error fetching article: ", res.status);
+      return null;
+    }
+
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0) {
+      console.error("Article not found");
+      return null;
+    }
+
+    const article: Article = data.items[0];
+    console.log(article);
+
+    return article;
+  } catch (error) {
+    console.error("Error fetching article:", error);
     return null;
   }
+}
 
-  const data = await res.json();
-
-  if (!data.items || data.items.length === 0) {
-    console.error("Article not found");
-    return null;
-  }
-
-  const article: Article = data.items;
-
-  return article;
+function getReadingTime(content: string) {
+  const wordsPerMinute = 200;
+  const wordCount = content.split(/\s+/).length;
+  const readingTime = Math.ceil(wordCount / wordsPerMinute);
+  return readingTime;
 }
 
 export default async function Page({
@@ -76,59 +83,126 @@ export default async function Page({
     notFound();
   }
 
-  const parsedContent = article.content
-    ? JSON.parse(article.content)
-    : { sections: [] };
+  const readingTime = getReadingTime(article.content);
 
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-    `https://trending-writer.vercel.app/articles/${slug}`
+    `${
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://trending-writer.vercel.app"
+    }/articles/${slug}`
   )}`;
+
   return (
-    <Card className="max-w-4xl mx-auto my-8 bg-card text-card-foreground shadow-lg rounded-xl hover:shadow-xl transition-shadow duration-200 ease-in-out">
-      <CardHeader className="p-6 border-b border-gray-200">
-        <CardTitle className="text-3xl font-bold mb-2 text-primary">
-          {article.title}
-        </CardTitle>
-        <div className="flex items-center text-muted-foreground mb-4">
-          <CalendarIcon className="w-4 h-4 mr-2" />
-          <span>
-            {new Date(article.created_at).toLocaleDateString()}
-          </span>
+    <div className="container max-w-4xl mx-auto py-8 px-4 md:px-0">
+      <Link
+        href="/articles"
+        className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to all articles
+      </Link>
+
+      <article className="bg-card rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-8 md:px-10 md:py-12">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+            {article.title}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center">
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              <time dateTime={article.created_at}>
+                {article.created_at &&
+                  new Date(article.created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }
+                  )}
+              </time>
+            </div>
+
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2" />
+              <span>{readingTime} min read</span>
+            </div>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
+
         {article.image_url && (
-          <div className="mb-6">
+          <div className="w-full h-[300px] md:h-[400px] relative">
             <Image
-              src={article.image_url}
+              src={article.image_url || "/placeholder.svg"}
               alt={article.title}
-              width={800}
-              height={400}
-              className="rounded-lg object-cover w-full"
+              fill
+              className="object-cover"
+              priority
             />
           </div>
         )}
-        <div className="prose max-w-none dark:prose-invert mb-6">
-          {article.content}
+
+        <div className="px-6 py-8 md:px-10">
+          {article.summary && (
+            <div className="mb-8">
+              <p className="text-lg font-medium italic text-muted-foreground border-l-4 border-primary/50 pl-4 py-2">
+                {article.summary}
+              </p>
+            </div>
+          )}
+
+          <ClientMarkdown
+            content={article.content}
+            className="article-content"
+          />
+
+          <Separator className="my-8" />
+          <div className="flex flex-col gap-6">
+            {article.meta_keywords &&
+              article.meta_keywords.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2 flex items-center">
+                    <Tag className="h-4 w-4 mr-2" />
+                    Topics
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {article.meta_keywords.map((keyword, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="px-3 py-1"
+                      >
+                        {keyword}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            <div className="mx-auto flex max-w-2xl items-center justify-between">
+              {/* <div className="flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Share this article
+                </span>
+              </div> */}
+
+              <div className="flex gap-2">
+                <a
+                  href={fbShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                >
+                  <Facebook className="h-4 w-4 mr-2" />
+                  Share on Facebook
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <TagIcon className="w-4 h-4 text-muted-foreground" />
-          {article?.meta_keywords?.map((keyword, index) => (
-            <Badge key={index} variant="secondary">
-              {keyword}
-            </Badge>
-          ))}
-        </div>
-        <a
-          href={fbShareUrl}
-          // onClick={() => window.open(fbShareUrl, "_blank")}
-          type="button"
-          className="flex items-center  text-primary hover:text-primary-foreground transition-colors duration-200 ease-in-out"
-        >
-          <FacebookIcon className="w-4 h-4 mr-2" />
-          Share on Facebook
-        </a>
-      </CardContent>
-    </Card>
+      </article>
+    </div>
   );
 }

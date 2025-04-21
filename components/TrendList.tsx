@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, JSX } from "react";
+import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import UpdateTrendsButton from "./UpdateTrendsBtn";
+import { Badge } from "@/components/ui/badge";
 import {
   Edit,
   Trash2,
@@ -12,27 +12,24 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/hooks/use-toast";
-import { revalidateTag } from "next/cache";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "./ui/card";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 import {
   Dialog,
@@ -71,7 +68,7 @@ export default function TrendList({
   pageSize,
 }: TrendListProps) {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [dialogMode, setDialogMode] = useState<
     "edit" | "delete" | null
   >(null);
@@ -90,99 +87,14 @@ export default function TrendList({
 
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const handlePageChange = (newPage: number) => {
-    router.push(`${pathname}?page=${newPage}`);
-  };
-  const renderPaginationItems = () => {
-    const items = [];
-    const maxVisiblePages = 2;
-    const halfVisible = Math.floor(maxVisiblePages / 2);
-
-    let startPage = Math.max(currentPage - halfVisible, 1);
-    const endPage = Math.min(
-      startPage + maxVisiblePages - 1,
-      totalPages
-    );
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(endPage - maxVisiblePages + 1, 1);
-    }
-
-    if (startPage > 1) {
-      items.push(
-        <PaginationItem key="start-ellipsis">
-          <PaginationEllipsis />
-        </PaginationItem>
-      );
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      items.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            href={`${pathname}?page=${i}`}
-            isActive={i === currentPage}
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(i);
-            }}
-          >
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    if (endPage < totalPages) {
-      items.push(
-        <PaginationItem key="end-ellipsis">
-          <PaginationEllipsis />
-        </PaginationItem>
-      );
-    }
-
-    return items;
-  };
-
-  const openEditDialog = (trend: TrendItem) => {
-    setEditingTrend(trend);
-    setDialogMode("edit");
-  };
-
-  const openDeleteDialog = (trend: TrendItem) => {
+  const handleDeleteClick = (trend: TrendItem) => {
     setEditingTrend(trend);
     setDialogMode("delete");
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!editingTrend) return;
-    try {
-      const res = await fetch(`/api/trends/${editingTrend.id}`, {
-        method: "DELETE",
-      });
-      if (res.status !== 200)
-        throw new Error("Failed to delete trend");
-      router.refresh();
-      toast({
-        title: "Trend deleted",
-        description: "The trend has been deleted successfully.",
-      });
-      setEditingTrend(null);
-      setDialogMode(null);
-    } catch (error) {
-      console.error("Error deleting trend:", error);
-      toast({
-        variant: "destructive",
-        title: "Error deleting trend",
-        description: `Failed to delete trend: ${
-          (error as Error).message
-        }`,
-      });
-    }
-  };
-
-  const handleEdit = (trend: TrendItem) => {
+  const handleEditClick = (trend: TrendItem) => {
     setEditingTrend(trend);
+    setDialogMode("edit");
   };
 
   const handleGenerateArticle = async (trend: TrendItem) => {
@@ -194,7 +106,6 @@ export default function TrendList({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          trend_id: trend.id,
           title: trend.title,
           trendData: {
             trend_id: trend.id,
@@ -203,16 +114,22 @@ export default function TrendList({
             published_at: trend.publication_date,
             news_items: trend.news_items,
           },
+          approxTraffic: trend.approx_traffic,
+          pubDate: trend.publication_date,
+          newsItems: trend.news_items,
           image_url: null,
           is_published: false,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate article");
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Failed to generate article"
+        );
       }
 
-      const data = await response.json();
+      await response.json();
 
       toast({
         title: "Article generated successfully",
@@ -222,29 +139,20 @@ export default function TrendList({
       const event = new CustomEvent(ARTICLE_GENERATED_EVENT);
       window.dispatchEvent(event);
     } catch (error) {
+      setError(
+        error instanceof Error ? error.message : String(error)
+      );
       console.error("Error generating article:", error);
       toast({
         title: "Error generating article",
         description: `Failed to generate article: ${
           error instanceof Error ? error.message : String(error)
         }`,
+        variant: "destructive",
       });
     } finally {
       setGeneratingArticle(null);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await fetch(`/api/trends/${id}`, {
-        method: "DELETE",
-      });
-      if (res.status !== 200)
-        throw new Error("Failed to delete trend");
-      // setTrends(trends.filter((t) => t.id !== id));
-      router.refresh();
-    } catch (error) {
-      console.error("Error deleting trend:", error);
+      setLoading(false);
     }
   };
 
@@ -286,208 +194,262 @@ export default function TrendList({
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!editingTrend) return;
+
+    try {
+      const res = await fetch(`/api/trends/${editingTrend.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete trend");
+      }
+      router.refresh();
+      setEditingTrend(null);
+      setDialogMode(null);
+      toast({
+        title: "Trend deleted",
+        description: "The trend has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error deleting trend:", error);
+      toast({
+        variant: "destructive",
+        title: "Error deleting trend",
+        description: `Failed to delete trend: ${
+          (error as Error).message || error
+        }`,
+      });
+    }
+  };
+
   return (
-    <Card className="w-full p-4">
-      <UpdateTrendsButton />
-      <CardHeader>
-        <CardTitle>Trending Topics</CardTitle>
-        <CardDescription>
-          Explore and manage current trending topics.
-        </CardDescription>
-      </CardHeader>
-      <Separator />
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-none shadow-md">
+        <CardHeader className="bg-muted/50 pb-4">
+          <CardTitle>Trending Topics</CardTitle>
+          <CardDescription>
+            Explore and manage current trending topics
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Traffic</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>News Items</TableHead>
+                  <TableHead className="text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {trends?.map((trend) => (
+                  <TableRow key={trend.id}>
+                    <TableCell className="font-medium">
+                      {trend.title}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {trend.approx_traffic}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(
+                        trend.publication_date
+                      ).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      <ScrollArea className="h-24 rounded-md border p-2">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {trend.news_items}
+                        </ReactMarkdown>
+                      </ScrollArea>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditClick(trend)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteClick(trend)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleGenerateArticle(trend)}
+                          disabled={generatingArticle === trend.id}
+                        >
+                          {generatingArticle === trend.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FilePlus2 className="h-4 w-4 mr-1" />
+                          )}
+                          <span className="hidden sm:inline">
+                            Generate
+                          </span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Traffic</TableHead>
-              <TableHead>Date</TableHead>
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href={`${pathname}?page=${Math.max(
+                  1,
+                  currentPage - 1
+                )}`}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (page) => {
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  Math.abs(page - currentPage) <= 1
+                ) {
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href={`${pathname}?page=${page}`}
+                        isActive={page === currentPage}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                }
 
-              <TableHead>News Items</TableHead>
-
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {trends?.map((trend) => (
-              <TableRow key={trend.id}>
-                <TableCell>{trend.title}</TableCell>
-                <TableCell>{trend.approx_traffic}</TableCell>
-                <TableCell>
-                  {" "}
-                  {new Date(
-                    trend.publication_date
-                  ).toLocaleDateString()}
-                </TableCell>
-
-                <TableCell>
-                  <ul>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {trend.news_items}
-                    </ReactMarkdown>
-                  </ul>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => openEditDialog(trend)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => openDeleteDialog(trend)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      onClick={() => handleGenerateArticle(trend)}
-                      disabled={generatingArticle === trend.id}
-                      variant="outline"
-                      size="icon"
-                    >
-                      {generatingArticle === trend.id ? (
-                        <>
-                          <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        </>
-                      ) : (
-                        <FilePlus2
-                          stroke="green"
-                          className="ml-2 h-4 w-4"
-                        />
-                      )}
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href={`${pathname}?page=${currentPage - 1}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 1)
-                      handlePageChange(currentPage - 1);
-                  }}
-                />
-              </PaginationItem>
-              {renderPaginationItems()}
+                if (
+                  (page === 2 && currentPage > 3) ||
+                  (page === totalPages - 1 &&
+                    currentPage < totalPages - 2)
+                ) {
+                  return (
+                    <PaginationItem key={page + "-ellipsis"}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              }
+            )}
+          </PaginationContent>
+          <PaginationContent>
+            {currentPage < totalPages && (
               <PaginationItem>
                 <PaginationNext
-                  href={`${pathname}?page=${currentPage + 1}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages)
-                      handlePageChange(currentPage + 1);
-                  }}
+                  href={`${pathname}?page=${Math.min(
+                    totalPages,
+                    currentPage + 1
+                  )}`}
                 />
               </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      </CardContent>
+            )}
+          </PaginationContent>
+        </Pagination>
+      )}
+
       <Dialog
-        open={!!dialogMode}
+        open={dialogMode === "edit"}
         onOpenChange={() => setDialogMode(null)}
       >
         <DialogContent>
-          {dialogMode === "edit" && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Edit Trend</DialogTitle>
-                <DialogDescription>
-                  Make changes to the trend here. Click save when
-                  you&apos;re done.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSaveEdit}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="title" className="text-right">
-                      Title
-                    </Label>
-                    <Input
-                      id="title"
-                      value={editingTrend?.title}
-                      onChange={(e) =>
-                        setEditingTrend({
-                          ...editingTrend!,
-                          title: e.target.value,
-                        })
-                      }
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label
-                      htmlFor="approxTraffic"
-                      className="text-right"
-                    >
-                      Traffic
-                    </Label>
-                    <Input
-                      id="approxTraffic"
-                      value={editingTrend?.approx_traffic}
-                      onChange={(e) =>
-                        setEditingTrend({
-                          ...editingTrend!,
-                          approx_traffic: e.target.value,
-                        })
-                      }
-                      className="col-span-3"
-                    />
-                  </div>
+          <DialogHeader>
+            <DialogTitle>Edit Trend</DialogTitle>
+            <DialogDescription>
+              Make changes to the trend information.
+            </DialogDescription>
+          </DialogHeader>
+          {editingTrend && (
+            <form onSubmit={handleSaveEdit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={editingTrend.title}
+                    onChange={(e) =>
+                      setEditingTrend({
+                        ...editingTrend,
+                        title: e.target.value,
+                      })
+                    }
+                  />
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  <Button type="submit">Save changes</Button>
-                </DialogFooter>
-              </form>
-            </>
-          )}
-          {dialogMode === "delete" && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete the trend titled
-                  &quot;
-                  {editingTrend?.title}&quot;? This action cannot be
-                  undone.
-                </DialogDescription>
-              </DialogHeader>
+                <div className="grid gap-2">
+                  <Label htmlFor="traffic">Approximate Traffic</Label>
+                  <Input
+                    id="traffic"
+                    value={editingTrend.approx_traffic}
+                    onChange={(e) =>
+                      setEditingTrend({
+                        ...editingTrend,
+                        approx_traffic: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button type="button" variant="secondary">
-                    Cancel
-                  </Button>
+                  <Button variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteConfirm}
-                >
-                  Confirm Delete
-                </Button>
+                <Button type="submit">Save changes</Button>
               </DialogFooter>
-            </>
+            </form>
           )}
         </DialogContent>
       </Dialog>
-    </Card>
+
+      <Dialog
+        open={dialogMode === "delete"}
+        onOpenChange={() => setDialogMode(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Trend</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this trend? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

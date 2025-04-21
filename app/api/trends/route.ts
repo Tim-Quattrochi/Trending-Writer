@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/supabase/server";
 import crypto from "crypto";
-import { TrendItem } from "@/types/trend";
 import { revalidatePath } from "next/cache";
 
 async function fetchRSS(url: string) {

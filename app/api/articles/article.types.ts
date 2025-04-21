@@ -1,5 +1,5 @@
 export interface Article {
-  id: string;
+  id: number;
   title: string;
   content: string;
   trend_id?: number;
@@ -15,13 +15,13 @@ export interface Article {
 }
 
 interface ArticleResponseSuccess {
-  data: Article[];
+  items: Article[];
   error?: undefined;
 }
 
 interface ArticleResponseError {
   error: string;
-  data?: undefined;
+  items?: undefined;
 }
 
 export type ArticleResponse =
