@@ -129,10 +129,6 @@ export default function ArticleCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* <ReactMarkdown remarkPlugins={[remarkGfm]}> */}
-
-        {/* </ReactMarkdown> */}
-
         <p className="line-clamp-3">{article.content}</p>
         {isExpanded && (
           <div className="mt-4">
@@ -174,11 +170,9 @@ export default function ArticleCard({
       <CardFooter className="flex justify-between">
         <Button variant="ghost" size="sm">
           <ThumbsUp className="mr-2 h-4 w-4" />
-          {/* {article.likes} */}
         </Button>
         <Button variant="ghost" size="sm">
           <MessageSquare className="mr-2 h-4 w-4" />{" "}
-          {/* {article.comments} */}
         </Button>
       </CardFooter>
     </Card>

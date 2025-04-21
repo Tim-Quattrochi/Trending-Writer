@@ -1,89 +1,65 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-const navItems = [
-  { name: "Home", href: "/" },
-  { name: "Articles", href: "/articles" },
-  { name: "About", href: "/about" },
-  { name: "Contact", href: "/contact" },
-];
+import { Newspaper, TrendingUp, Home } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ModeToggle } from "./mode-toggle";
 
 export default function Navigation() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  const navItems = [
+    {
+      href: "/",
+      label: "Trends",
+      icon: TrendingUp,
+      active:
+        pathname === "/" ||
+        pathname.startsWith("/trends") ||
+        pathname.startsWith("/trends/"),
+    },
+    {
+      href: "/articles",
+      label: "Articles",
+      icon: Newspaper,
+      active:
+        pathname === "/articles" || pathname.startsWith("/articles"),
+    },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link className="mr-6 flex items-center space-x-2" href="/">
-            <span className="hidden font-bold sm:inline-block gradient-header">
-              AI Mock Interview
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link className="flex items-center gap-2" href="/">
+            <TrendingUp className="h-6 w-6 text-primary" />
+            <span className="hidden font-bold sm:inline-block text-xl">
+              Trending Writer
             </span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`transition-colors hover:text-foreground/80 ${
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-foreground/60"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
         </div>
-        <Button className="ml-auto hidden md:flex" variant="default">
-          Sign In
-        </Button>
-        <button
-          className="ml-auto flex items-center md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          <span className="sr-only">Toggle menu</span>
-          {isMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </button>
-      </div>
-      {isMenuOpen && (
-        <div className="container md:hidden">
-          <nav className="mt-2 flex flex-col space-y-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`transition-colors hover:text-foreground/80 ${
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-foreground/60"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-            <Button
-              className="mt-4"
-              variant="default"
-              onClick={() => setIsMenuOpen(false)}
+        <nav className="flex items-center gap-1 md:gap-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "group flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                item.active
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground"
+              )}
             >
-              Sign In
-            </Button>
-          </nav>
-        </div>
-      )}
+              <item.icon className="h-4 w-4 mr-2" />
+              {item.label}
+            </Link>
+          ))}
+          <div className="ml-2">
+            <ModeToggle />
+          </div>
+        </nav>
+      </div>
     </header>
   );
 }

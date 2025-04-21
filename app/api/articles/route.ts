@@ -18,6 +18,14 @@ const articleSchema = z.object({
   content: z
     .string()
     .min(500)
+    .transform((val) => {
+      // Ensure the content is clean and standardized with proper markdown formatting
+      // This helps ensure consistent rendering regardless of AI generation quirks
+      return val
+        .trim()
+        .replace(/\r\n/g, "\n") // Normalize line endings
+        .replace(/\n{3,}/g, "\n\n"); // Remove excessive line breaks
+    })
     .describe(
       "The full content of the article, well-structured, engaging, and optimized for SEO (minimum 500 words)"
     ),
@@ -68,6 +76,20 @@ const articleSchema = z.object({
     .describe("A list of 5-7 relevant SEO keywords for the article"),
 });
 
+// Function to normalize article content format for consistent rendering
+function normalizeArticleContent(articles) {
+  return articles.map((article) => {
+    // Return articles with consistently formatted content
+    return {
+      ...article,
+      content: article.content
+        .trim()
+        .replace(/\r\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n"),
+    };
+  });
+}
+
 export async function POST(req: Request) {
   const body = await req.json();
 
@@ -100,6 +122,12 @@ export async function POST(req: Request) {
   6. Keywords: Dynamically generate 5-7 relevant SEO keywords based on the trend data, including synonyms and commonly searched terms.
   7. CTA: Conclude with a subtle call to action encouraging readers to engage or explore related content.
 
+  Format your content with proper markdown:
+  - Use blank lines between paragraphs
+  - Format bullet lists with * or - 
+  - Format tables with proper pipe syntax
+  - Use proper markdown for headings (# for main headings, ## for subheadings)
+
   Maintain a professional, engaging tone that appeals to social media scrollers and social media users who love reading juicy articles. Use the provided news items as a foundation, but expand on the topic with additional insights as needed.`;
 
     const { object } = await generateObject({
@@ -127,13 +155,18 @@ export async function POST(req: Request) {
       );
     }
 
+    const formattedContent = object.content
+      .trim()
+      .replace(/\r\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n");
+
     const { data: newArticle, error: insertError } = await supabase
       .from("articles")
       .insert([
         {
           trend_id: body.trendData.trend_id,
           title: object.title,
-          content: object.content,
+          content: formattedContent,
           summary: object.summary,
           image_url: body.image_url,
           slug,
@@ -182,6 +215,8 @@ export async function GET(req: Request) {
       ? sortParam
       : "created_at";
 
+  const slug = url.searchParams.get("slug");
+
   const validSortColumns: Record<
     SortKey,
     { column: string; ascending: boolean }
@@ -193,6 +228,10 @@ export async function GET(req: Request) {
 
   try {
     let query = supabase.from("articles").select("*");
+
+    if (slug) {
+      query = query.eq("slug", slug);
+    }
 
     if (sortBy && validSortColumns[sortBy]) {
       query = query.order(validSortColumns[sortBy].column, {
@@ -211,8 +250,13 @@ export async function GET(req: Request) {
         { status: 500 }
       );
     }
+
+    const normalizedArticles = articles
+      ? normalizeArticleContent(articles)
+      : [];
+
     revalidateTag("articles");
-    return NextResponse.json({ items: articles });
+    return NextResponse.json({ items: normalizedArticles });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
@@ -224,7 +268,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
-  const body = req.json();
+  const body = await req.json();
 
   if (!body.title || !body.approx_traffic) {
     return NextResponse.json(
@@ -235,7 +279,7 @@ export async function PATCH(req: Request) {
 
   const { title, approx_traffic } = body;
 
-  const { data, error } = supabase
+  const { data, error } = await supabase
     .from("trends")
     .update({ title, approx_traffic })
     .select();
