@@ -6,6 +6,7 @@ import { revalidateTag } from "next/cache";
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { generateSlug } from "@/lib/utils";
+import { checkAdminAccess } from "@/lib/auth";
 
 const articleSchema = z.object({
   title: z
@@ -91,6 +92,11 @@ function normalizeArticleContent(articles) {
 }
 
 export async function POST(req: Request) {
+  const { isAdmin, error: authError } = await checkAdminAccess();
+  if (!isAdmin) {
+    return authError;
+  }
+
   const body = await req.json();
 
   if (!body.trendData || !body.title) {
@@ -267,6 +273,11 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const { isAdmin, error: authError } = await checkAdminAccess();
+  if (!isAdmin) {
+    return authError;
+  }
+
   const supabase = await createClient();
   const body = await req.json();
 

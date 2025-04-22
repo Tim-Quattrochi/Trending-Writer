@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { editTrends } from "@/app/(dashboard)/actions";
 import { createClient } from "@/supabase/server";
+import { checkAdminAccess } from "@/lib/auth";
 
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  const { isAdmin, error: authError } = await checkAdminAccess();
+  if (!isAdmin) {
+    return authError;
+  }
+
   const { id } = await params;
   const body = await req.json();
   const { title, approx_traffic, hash } = body;
@@ -35,6 +41,11 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  const { isAdmin, error: authError } = await checkAdminAccess();
+  if (!isAdmin) {
+    return authError;
+  }
+
   try {
     const supabase = await createClient();
 

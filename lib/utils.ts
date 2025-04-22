@@ -6,7 +6,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Generate slug for articles
-
 export function generateSlug(title: string): string {
   return title
     .toLowerCase()

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/supabase/server";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { checkAdminAccess } from "@/lib/auth";
 
 async function fetchRSS(url: string) {
   const response = await fetch(url, { next: { tags: ["trends"] } });
@@ -97,6 +98,11 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
 }
 
 export async function POST(req: Request) {
+  const { isAdmin, error } = await checkAdminAccess();
+  if (!isAdmin) {
+    return error;
+  }
+
   const supabase = await createClient();
 
   const { data: lastUpdated, error: lastUpdatedError } =
