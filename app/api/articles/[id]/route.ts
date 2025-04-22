@@ -1,10 +1,16 @@
 import { createClient } from "@/supabase/server";
 import { NextResponse } from "next/server";
+import { checkAdminAccess } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
+  const { isAdmin, error: authError } = await checkAdminAccess();
+  if (!isAdmin) {
+    return authError;
+  }
+
   const params = await props.params;
 
   const supabase = await createClient();

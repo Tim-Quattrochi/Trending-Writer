@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { createClient } from "@/supabase/server";
+import { checkAdminAccess } from "@/lib/auth";
 
 export async function POST(req: Request) {
+  const { isAdmin, error: authError } = await checkAdminAccess();
+  if (!isAdmin) {
+    return authError;
+  }
+
   const supabase = await createClient();
   const body = await req.json();
   const { trend_id, title, trendData, is_published, content } = body;

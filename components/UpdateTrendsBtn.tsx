@@ -16,7 +16,7 @@ export default function UpdateTrendsButton() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_VERCEL_URL}/trends`,
+        `${process.env.NEXT_PUBLIC_VERCEL_URL}/api/trends`,
         {
           method: "POST",
         }
@@ -25,7 +25,9 @@ export default function UpdateTrendsButton() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.message || "Failed to update trends"
+          errorData.error ||
+            errorData.message ||
+            "Failed to update trends"
         );
       }
       const data = await response.json();
@@ -62,7 +64,13 @@ export default function UpdateTrendsButton() {
 
       router.refresh();
     } catch (error) {
-      console.log(error);
+      console.error("Error updating trends:", error);
+      toast({
+        title: "Error updating trends",
+        description:
+          error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
