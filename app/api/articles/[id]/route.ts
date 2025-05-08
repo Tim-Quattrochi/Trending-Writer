@@ -6,7 +6,9 @@ export async function PUT(
   request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
-  const { isAdmin, error: authError } = await checkAdminAccess();
+  const { isAdmin, error: authError } = await checkAdminAccess(
+    request
+  );
   if (!isAdmin) {
     return authError;
   }

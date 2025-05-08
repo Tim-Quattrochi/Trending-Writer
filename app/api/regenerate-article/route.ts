@@ -4,7 +4,7 @@ import { createClient } from "@/supabase/server";
 import { checkAdminAccess } from "@/lib/auth";
 
 export async function POST(req: Request) {
-  const { isAdmin, error: authError } = await checkAdminAccess();
+  const { isAdmin, error: authError } = await checkAdminAccess(req);
   if (!isAdmin) {
     return authError;
   }

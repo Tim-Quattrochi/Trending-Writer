@@ -92,7 +92,7 @@ function normalizeArticleContent(articles) {
 }
 
 export async function POST(req: Request) {
-  const { isAdmin, error: authError } = await checkAdminAccess();
+  const { isAdmin, error: authError } = await checkAdminAccess(req);
   if (!isAdmin) {
     return authError;
   }
@@ -211,6 +211,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+  console.log("GET /api/articles");
   const supabase = await createClient();
   const url = new URL(req.url);
   type SortKey = "created_at" | "published_at" | "title";
@@ -273,7 +274,7 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const { isAdmin, error: authError } = await checkAdminAccess();
+  const { isAdmin, error: authError } = await checkAdminAccess(req);
   if (!isAdmin) {
     return authError;
   }

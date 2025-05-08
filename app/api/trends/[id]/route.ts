@@ -74,3 +74,27 @@ export async function DELETE(
     );
   }
 }
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  // No authentication required for GET requests
+  const { id } = params;
+  const supabase = await createClient();
+  // ...existing code...
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const { isAdmin, error: authError } = await checkAdminAccess(
+    request
+  );
+  if (!isAdmin) {
+    return authError;
+  }
+
+  // ...existing code...
+}
