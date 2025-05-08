@@ -98,7 +98,7 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
 }
 
 export async function POST(req: Request) {
-  const { isAdmin, error } = await checkAdminAccess();
+  const { isAdmin, error } = await checkAdminAccess(req);
   if (!isAdmin) {
     return error;
   }

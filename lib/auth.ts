@@ -3,7 +3,28 @@
 import { createClient } from "@/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function checkAdminAccess() {
+export async function checkAdminAccess(req?: Request) {
+  // If the request is provided, check if it's for a public API endpoint
+  if (req) {
+    const url = new URL(req.url);
+
+    // List of API endpoints that should be public (no login required)
+    const publicEndpoints = [
+      "/api/articles", // GET articles endpoint
+      "/api/trends", // GET trends endpoint
+    ];
+
+    // Check if this is a GET request to a public endpoint
+    if (
+      req.method === "GET" &&
+      publicEndpoints.some((endpoint) =>
+        url.pathname.startsWith(endpoint)
+      )
+    ) {
+      return { isAdmin: true, user: null, error: null };
+    }
+  }
+
   const supabase = await createClient();
 
   const {
