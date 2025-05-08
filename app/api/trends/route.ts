@@ -115,7 +115,16 @@ export async function POST(req: Request) {
     );
     return NextResponse.json(
       { error: "Error fetching last updated time" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
     );
   }
 
@@ -198,19 +207,40 @@ export async function POST(req: Request) {
       }
       revalidatePath("/", "layout");
 
-      return NextResponse.json({
-        message: "Successfully updated trending news.",
-        addedTrends: newTrends,
-        insertedTrendsCount,
-        updatedTrendsCount,
-      });
+      return NextResponse.json(
+        {
+          message: "Successfully updated trending news.",
+          addedTrends: newTrends,
+          insertedTrendsCount,
+          updatedTrendsCount,
+        },
+        {
+          status: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods":
+              "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers":
+              "Content-Type, Authorization",
+          },
+        }
+      );
     } catch (error) {
       console.error("Error:", error);
       return NextResponse.json(
         {
           message: "Error updating trending news.",
         },
-        { status: 500 }
+        {
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods":
+              "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers":
+              "Content-Type, Authorization",
+          },
+        }
       );
     }
   }
@@ -241,19 +271,40 @@ export async function GET(req: Request): Promise<NextResponse> {
       throw new Error("Error fetching trends");
     }
 
-    return NextResponse.json({
-      items: trends,
-      total: count,
-      page,
-      limit,
-    });
+    return NextResponse.json(
+      {
+        items: trends,
+        total: count,
+        page,
+        limit,
+      },
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
       {
         message: "Error fetching trends.",
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
     );
   }
 }

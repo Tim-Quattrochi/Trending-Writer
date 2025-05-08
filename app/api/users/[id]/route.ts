@@ -1,7 +1,11 @@
 import { type NextRequest } from "next/server";
 import { createClient } from "@/supabase/server";
+import { NextResponse } from "next/server";
 
-export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   const id = params.id;
 
@@ -12,11 +16,35 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return new Response("Unauthorized", { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      {
+        status: 401,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
+    );
   }
 
   if (user.id !== id) {
-    return new Response("Forbidden", { status: 403 });
+    return NextResponse.json(
+      { error: "Forbidden" },
+      {
+        status: 403,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
+    );
   }
 
   const { error } = await supabase
@@ -26,16 +54,30 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
 
   if (error) {
     console.error("Error deleting user:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to delete user" }),
+    return NextResponse.json(
+      { error: "Failed to delete user" },
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
       }
     );
   }
 
   await supabase.auth.signOut();
 
-  return new Response(null, { status: 204 });
+  return NextResponse.json(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods":
+        "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }

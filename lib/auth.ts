@@ -12,6 +12,7 @@ export async function checkAdminAccess(req?: Request) {
     const publicEndpoints = [
       "/api/articles", // GET articles endpoint
       "/api/trends", // GET trends endpoint
+      "/api/categories", // GET categories endpoint
     ];
 
     // Check if this is a GET request to a public endpoint

@@ -41,7 +41,11 @@ export async function updateSession(request: NextRequest) {
 
   // Check if the path is an API route that should allow unauthenticated access
   const isPublicApiRoute =
-    request.nextUrl.pathname.startsWith("/api/articles");
+    request.nextUrl.pathname.startsWith("/api/articles") ||
+    request.nextUrl.pathname.startsWith("/api/trends") ||
+    request.nextUrl.pathname.startsWith("/api/categories") ||
+    request.nextUrl.pathname.startsWith("/api/regenerate-article") ||
+    request.nextUrl.pathname.startsWith("/api/post-to-facebook");
 
   if (
     !user &&
