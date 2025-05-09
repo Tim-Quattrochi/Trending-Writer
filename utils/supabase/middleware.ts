@@ -39,10 +39,19 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Check if the path is an API route that should allow unauthenticated access
+  const isPublicApiRoute =
+    request.nextUrl.pathname.startsWith("/api/articles") ||
+    request.nextUrl.pathname.startsWith("/api/trends") ||
+    request.nextUrl.pathname.startsWith("/api/categories") ||
+    request.nextUrl.pathname.startsWith("/api/regenerate-article") ||
+    request.nextUrl.pathname.startsWith("/api/post-to-facebook");
+
   if (
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
+    !request.nextUrl.pathname.startsWith("/auth") &&
+    !isPublicApiRoute
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();

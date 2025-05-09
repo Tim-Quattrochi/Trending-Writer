@@ -102,7 +102,16 @@ export async function POST(req: Request) {
   if (!body.trendData || !body.title) {
     return NextResponse.json(
       { message: "trend data and title are required." },
-      { status: 400 }
+      {
+        status: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
     );
   }
 
@@ -197,15 +206,35 @@ export async function POST(req: Request) {
 
     revalidateTag("articles");
 
-    return Response.json({
-      message: "Article generated",
-      object,
-    });
+    return Response.json(
+      {
+        message: "Article generated",
+        object,
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
     );
   }
 }
@@ -263,7 +292,19 @@ export async function GET(req: Request) {
       : [];
 
     revalidateTag("articles");
-    return NextResponse.json({ items: normalizedArticles });
+    return NextResponse.json(
+      { items: normalizedArticles },
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
@@ -285,7 +326,16 @@ export async function PATCH(req: Request) {
   if (!body.title || !body.approx_traffic) {
     return NextResponse.json(
       { message: "All fields are required." },
-      { status: 422 }
+      {
+        status: 422,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
     );
   }
 
@@ -298,12 +348,31 @@ export async function PATCH(req: Request) {
 
   if (error) {
     console.error(error);
-    return NextResponse.json({
-      message: `Error editing tend: ${error}`,
-    });
+    return NextResponse.json(
+      { message: `Error editing tend: ${error}` },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization",
+        },
+      }
+    );
   }
 
   revalidateTag("trends");
 
-  return NextResponse.json({ data });
+  return NextResponse.json(
+    { data },
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods":
+          "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    }
+  );
 }
