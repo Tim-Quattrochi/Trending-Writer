@@ -60,7 +60,47 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
     const title = item.title;
     const approxTraffic = item["ht:approx_traffic"] || "N/A";
     const pubDate = item.pubDate;
-    const picture = item["ht:picture"] || null;
+
+    // Enhanced image extraction
+    let picture = null;
+    if (item["ht:picture"]) {
+      // Direct picture attribute
+      picture = item["ht:picture"];
+    } else if (item["media:content"] && item["media:content"].url) {
+      // Try media:content tag if available
+      picture = item["media:content"].url;
+    } else if (
+      item["enclosure"] &&
+      item["enclosure"].url &&
+      (item["enclosure"].type || "").startsWith("image/")
+    ) {
+      // Try enclosure tag with image type
+      picture = item["enclosure"].url;
+    }
+
+    // Attempt to extract image from news item content if still null
+    if (
+      !picture &&
+      item["ht:news_item"] &&
+      Array.isArray(item["ht:news_item"])
+    ) {
+      // Look for image URL patterns in the first few news items
+      for (
+        let i = 0;
+        i < Math.min(3, item["ht:news_item"].length);
+        i++
+      ) {
+        const newsItemContent =
+          item["ht:news_item"][i]["ht:news_item_url"];
+        if (
+          newsItemContent &&
+          newsItemContent.match(/\.(jpg|jpeg|png|gif|webp)/i)
+        ) {
+          picture = newsItemContent;
+          break;
+        }
+      }
+    }
 
     const newsItems: string[] = [];
     if (Array.isArray(item["ht:news_item"])) {
@@ -98,6 +138,7 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
 }
 
 export async function POST(req: Request) {
+  // Restore authentication check
   const { isAdmin, error } = await checkAdminAccess(req);
   if (!isAdmin) {
     return error;

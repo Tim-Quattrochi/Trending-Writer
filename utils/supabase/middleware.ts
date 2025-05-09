@@ -45,7 +45,11 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/api/trends") ||
     request.nextUrl.pathname.startsWith("/api/categories") ||
     request.nextUrl.pathname.startsWith("/api/regenerate-article") ||
-    request.nextUrl.pathname.startsWith("/api/post-to-facebook");
+    request.nextUrl.pathname.startsWith("/api/post-to-facebook") ||
+    request.nextUrl.pathname.startsWith("/articles") ||
+    request.nextUrl.pathname.startsWith("/trends") ||
+    request.nextUrl.pathname.startsWith("/users") ||
+    request.nextUrl.pathname.startsWith("/auth");
 
   if (
     !user &&

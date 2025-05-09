@@ -122,10 +122,15 @@ export default function TrendList({
         }),
       });
 
+      console.log("Response status:", response);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.log("Error response:", errorData);
         throw new Error(
-          errorData.error || errorData.message || "Failed to generate article"
+          errorData.error ||
+            errorData.message ||
+            "Failed to generate article"
         );
       }
 
@@ -143,7 +148,8 @@ export default function TrendList({
       console.error("Error generating article:", error);
       toast({
         title: "Error generating article",
-        description: error instanceof Error ? error.message : String(error),
+        description:
+          error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {

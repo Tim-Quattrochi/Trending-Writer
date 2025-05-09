@@ -48,7 +48,10 @@ export async function checkAdminAccess(req?: Request) {
     .eq("id", user.id)
     .single();
 
-  if (error || !userProfile || !userProfile.is_admin) {
+  // Convert snake_case from database to camelCase for application use
+  const isAdmin = userProfile?.is_admin ?? false;
+
+  if (error || !userProfile || !isAdmin) {
     return {
       isAdmin: false,
       user,

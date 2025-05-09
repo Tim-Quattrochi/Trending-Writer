@@ -5,9 +5,24 @@ import { usePathname } from "next/navigation";
 import { Newspaper, TrendingUp, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "./mode-toggle";
+import { useEffect, useState } from "react";
+import { createClient } from "@/supabase/client";
+import LogoutButton from "./LogoutButton";
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check user auth status
+    const checkUserAuth = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    };
+
+    checkUserAuth();
+  }, []);
 
   const navItems = [
     {
@@ -55,7 +70,8 @@ export default function Navigation() {
               {item.label}
             </Link>
           ))}
-          <div className="ml-2">
+          <div className="flex items-center gap-2 ml-2">
+            {isLoggedIn && <LogoutButton />}
             <ModeToggle />
           </div>
         </nav>

@@ -153,6 +153,7 @@ export type Database = {
           publication_date: string | null;
           title: string | null;
           updated_at: string | null;
+          stored_image_url: string | null;
         };
         Insert: {
           approx_traffic?: string | null;
@@ -163,6 +164,7 @@ export type Database = {
           publication_date?: string | null;
           title?: string | null;
           updated_at?: string | null;
+          stored_image_url?: string | null;
         };
         Update: {
           approx_traffic?: string | null;
@@ -173,6 +175,7 @@ export type Database = {
           publication_date?: string | null;
           title?: string | null;
           updated_at?: string | null;
+          stored_image_url?: string | null;
         };
         Relationships: [];
       };

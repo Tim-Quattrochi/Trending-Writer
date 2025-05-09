@@ -16,7 +16,7 @@ export default function UpdateTrendsButton() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_VERCEL_URL}/api/trends`,
+        `${process.env.NEXT_PUBLIC_VERCEL_URL}/trends`,
         {
           method: "POST",
         }
