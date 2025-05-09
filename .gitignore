@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Database scripts
+create_user_profiles.sql
+create_user_profiles_bigint.sql
+
+# Sensitive migration files
+supabase/migrations/20250508*
+
+# Test components - uncomment if you want to keep them
+# app/signup-test/
+# components/SignupTest.tsx
