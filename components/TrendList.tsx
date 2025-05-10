@@ -117,7 +117,7 @@ export default function TrendList({
           approxTraffic: trend.approx_traffic,
           pubDate: trend.publication_date,
           newsItems: trend.news_items,
-          image_url: null,
+          image_url: trend.stored_image_url || null,
           is_published: false,
         }),
       });

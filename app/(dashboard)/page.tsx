@@ -67,6 +67,7 @@ async function getAllTrends(
     publication_date: item.publication_date,
     news_items: item.news_items,
     hash: item.hash,
+    stored_image_url: item.stored_image_url
   }));
 
   return { trends, total: data.total };

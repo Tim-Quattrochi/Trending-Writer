@@ -1,7 +1,7 @@
 import ArticleList from "@/components/ArticleList";
 import { notFound } from "next/navigation";
 import { ClientMarkdown } from "@/components/Markdown";
-
+import { Article } from "@/app/api/articles/article.types";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";

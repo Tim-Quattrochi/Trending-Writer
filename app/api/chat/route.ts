@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
 
 const articleSchema = z.object({
@@ -11,6 +11,48 @@ const articleSchema = z.object({
     .describe("A short summary suitable for social media"),
 });
 
+// Define schema for structured article output
+const articleResponseSchema = {
+  type: Type.OBJECT,
+  required: [
+    "title",
+    "content",
+    "summary",
+    "meta_description",
+    "keywords",
+  ],
+  properties: {
+    title: {
+      type: Type.STRING,
+      description:
+        "Catchy and SEO-friendly headline for the article (up to 150 characters)",
+    },
+    content: {
+      type: Type.STRING,
+      description:
+        "The full article content in proper markdown format with headings, paragraphs, and lists",
+    },
+    summary: {
+      type: Type.STRING,
+      description:
+        "A concise summary suitable for social media posts (under 200 characters)",
+    },
+    meta_description: {
+      type: Type.STRING,
+      description:
+        "SEO-friendly meta description (under 160 characters)",
+    },
+    keywords: {
+      type: Type.ARRAY,
+      description:
+        "5-7 relevant SEO keywords related to the article topic",
+      items: {
+        type: Type.STRING,
+      },
+    },
+  },
+};
+
 export async function POST(req: Request) {
   const { trendData } = await req.json();
 
@@ -19,79 +61,96 @@ export async function POST(req: Request) {
     apiKey: process.env.GEMINI_API_KEY,
   });
 
-  // Specify model ID as string (per docs)
-  const model = "gemini-1.5-pro";
+  // Use the supported models for structured output
+  const model = "gemini-2.0-flash-lite";
 
-  // Define configuration
+  // Define configuration with responseSchema
   const config = {
+    temperature: 0.45,
     responseMimeType: "application/json",
+    maxOutputTokens: 8000,
+    responseSchema: articleResponseSchema,
     systemInstruction: [
       {
-        text: `You are an expert in SEO and content marketing. Write an article that will rank well on Google and attract organic traffic.`,
-      },
-    ],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 8000,
-    },
-  };
+        text: `You are a world-class journalist and an expert in SEO and content marketing. Your task is to write a high-quality, engaging, and SEO-optimized article that will rank well on Google and attract organic traffic.
 
-  // Define contents using proper structure
-  const contents = [
-    {
-      role: "user",
-      parts: [
-        {
-          text: `Generate an SEO-friendly article based on the following trend data:
+Base your article on the following trend data:
 
 Trend Title: ${trendData.title}
 Approximate Traffic: ${trendData.approxTraffic}
 Publication Date: ${trendData.pubDate}
 News Items (Markdown): ${trendData.newsItems}
-Focus on these SEO keywords: ${trendData.title}, ${trendData.approxTraffic}
 
-Return the article in the following format:
-Title: ${trendData.title}
-Content: [generated content]
-Summary: [generated summary]`,
+Article Requirements:
+
+1. Headline: Craft a catchy and SEO-friendly headline that accurately reflects the content and is under 150 characters.
+2. Content: Write a well-structured article of at least 500 words. Naturally incorporate these SEO keywords: ${trendData.title}, trending news, [related terms]. Reference at least 2 of the news items provided.
+3. Visuals: Use at least one bullet-point list, table, or formatted section to enhance readability.
+4. Summary: Keep the summary UNDER 200 characters and suitable for social media sharing.
+5. Meta Description: Write a concise meta description under 160 characters that captures the essence of the article.
+6. Keywords: Dynamically generate 5-7 relevant SEO keywords based on the trend data, including synonyms and commonly searched terms.
+7. CTA: Conclude with a subtle call to action encouraging readers to engage or explore related content.
+
+Format your content with proper markdown:
+- Use blank lines between paragraphs
+- Format bullet lists with * or - 
+- Format tables with proper pipe syntax
+- Use proper markdown for headings (# for main headings, ## for subheadings)
+
+Maintain a professional, engaging tone that appeals to social media scrollers and social media users who love reading juicy articles.`,
+      },
+    ],
+  };
+
+  const contents = [
+    {
+      role: "journalist",
+      parts: [
+        {
+          text: `Generate a structured article about the trending topic "${trendData.title}" following the format in the schema.`,
         },
       ],
     },
   ];
 
   try {
-    // Stream the response using the official documented pattern
-    const response = await ai.models.generateContentStream({
+    console.log(
+      "Generating structured article for:",
+      trendData.title
+    );
+
+    // Generate the content (non-streaming for structured output)
+    const response = await ai.models.generateContent({
       model,
       contents,
       ...config,
     });
 
-    // Set up streaming response
-    const encoder = new TextEncoder();
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of response) {
-            controller.enqueue(encoder.encode(chunk.text));
-          }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
+    const responseText = response.text;
 
-    return new Response(readableStream, {
+    if (!responseText) {
+      throw new Error("Empty response from the API");
+    }
+
+    // Parse the JSON response
+    const structuredArticle = JSON.parse(responseText);
+
+    console.log("Successfully generated structured article!");
+
+    // Return the structured response
+    return Response.json(structuredArticle, {
+      status: 200,
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Transfer-Encoding": "chunked",
+        "Content-Type": "application/json",
       },
     });
   } catch (error) {
     console.error("Error generating content:", error);
     return Response.json(
-      { error: "Failed to generate article" },
+      {
+        error: "Failed to generate article",
+        details: error.message || "Unknown error",
+      },
       { status: 500 }
     );
   }

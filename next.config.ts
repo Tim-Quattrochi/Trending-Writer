@@ -35,6 +35,26 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn3.gstatic.com',
+        pathname: '/images/**',
+      },
+      // Add other domains that might be used for images
+      {
+        protocol: 'https',
+        hostname: '*.gstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.google.com',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

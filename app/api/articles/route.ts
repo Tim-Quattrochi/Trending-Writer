@@ -1,114 +1,12 @@
-import { GoogleGenAI } from "@google/genai";
+import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { generateSummaryWithGemini } from "@/lib/gemini";
 import { createClient } from "@/supabase/server";
 import { revalidateTag } from "next/cache";
+import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { generateSlug } from "@/lib/utils";
 import { checkAdminAccess } from "@/lib/auth";
-
-// Utility for delay in ms
-const delay = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
-// Utility for exponential backoff with jitter
-const getBackoffTime = (
-  retryCount: number,
-  baseDelay = 1000,
-  maxDelay = 60000
-) => {
-  const exponentialBackoff = Math.min(
-    baseDelay * Math.pow(2, retryCount),
-    maxDelay
-  );
-  const jitter = Math.random() * 0.1 * exponentialBackoff;
-  return exponentialBackoff + jitter;
-};
-
-// Model fallback chain when rate limits are hit
-const MODEL_FALLBACK_CHAIN = [
-  "gemini-1.5-pro", // First try with best quality
-  "gemini-1.5-flash", // If rate limited, try with flash
-  "gemini-pro", // Last resort
-];
-
-// Try to generate content with rate limit handling and model fallback
-async function generateWithFallback(
-  ai: any,
-  prompt: string,
-  config: any
-) {
-  let lastError: any = null;
-  let result: any = null;
-
-  // Try each model in the fallback chain
-  for (const modelName of MODEL_FALLBACK_CHAIN) {
-    let retries = 0;
-    const maxRetries = 3;
-
-    while (retries < maxRetries) {
-      try {
-        console.log(
-          `Attempting with model: ${modelName}, retry: ${retries}`
-        );
-
-        // Generate content using current model
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-          ...config,
-        });
-
-        // If successful, return the result
-        result = response;
-        console.log(`Successfully generated with ${modelName}`);
-        return { response: result, modelUsed: modelName };
-      } catch (error: any) {
-        lastError = error;
-
-        // If rate limited and we should retry
-        if (
-          error?.message?.includes("429") ||
-          error?.error?.code === 429
-        ) {
-          const retryAfter =
-            error?.error?.details?.[2]?.retryDelay ||
-            `${getBackoffTime(retries)}ms`;
-          console.log(`Rate limited. Retry after: ${retryAfter}`);
-
-          // Extract retry delay from error if available
-          let delayMs = 1000 * (retries + 1);
-          if (typeof retryAfter === "string") {
-            if (retryAfter.endsWith("s")) {
-              delayMs = parseInt(retryAfter.slice(0, -1), 10) * 1000;
-            } else if (retryAfter.endsWith("ms")) {
-              delayMs = parseInt(retryAfter.slice(0, -2), 10);
-            }
-          }
-
-          // Wait before retry
-          await delay(delayMs);
-          retries++;
-        } else {
-          // For non-rate-limit errors, break and try next model
-          console.error(`Error with model ${modelName}:`, error);
-          break;
-        }
-      }
-    }
-  }
-
-  // If all models and retries failed
-  throw (
-    lastError ||
-    new Error("Failed to generate content with all fallback models")
-  );
-}
 
 const articleSchema = z.object({
   title: z
@@ -194,7 +92,7 @@ function normalizeArticleContent(articles) {
 }
 
 export async function POST(req: Request) {
-  const { isAdmin, error: authError } = await checkAdminAccess(req);
+  const { isAdmin, error: authError } = await checkAdminAccess();
   if (!isAdmin) {
     return authError;
   }
@@ -204,16 +102,7 @@ export async function POST(req: Request) {
   if (!body.trendData || !body.title) {
     return NextResponse.json(
       { message: "trend data and title are required." },
-      {
-        status: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
-        },
-      }
+      { status: 400 }
     );
   }
 
@@ -247,78 +136,18 @@ export async function POST(req: Request) {
 
   Maintain a professional, engaging tone that appeals to social media scrollers and social media users who love reading juicy articles. Use the provided news items as a foundation, but expand on the topic with additional insights as needed.`;
 
-    // Initialize the Google Generative AI client
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY || "",
-    });
-
-    // Define configuration based on Google's docs
-    const config = {
-      responseMimeType: "text/plain",
-      systemInstruction: [
-        {
-          text: "You are an expert in SEO and writing articles that generate organic traffic. Write an article that will rank well on Google and attract readers interested in trending news. Ensure the meta description is under 160 characters.",
-        },
-      ],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 8000,
-      },
-    };
-
-    // Try generation with fallback and retry logic
-    const { response, modelUsed } = await generateWithFallback(
-      ai,
+    const { object } = await generateObject({
+      model: google("gemini-1.5-pro"),
+      schema: articleSchema,
       prompt,
-      config
-    );
-    console.log(
-      `Successfully generated article using model: ${modelUsed}`
-    );
 
-    // Parse the result using Zod schema
-    const rawResponse = response.text();
-
-    // Extract the various parts using regex or other parsing methods
-    // This is a simplified approach - you might need more robust parsing
-    const titleMatch = rawResponse.match(
-      /Headline:?\s*(.*?)(?:\n|$)/i
-    );
-    const contentMatch = rawResponse.match(
-      /Content:?\s*([\s\S]*?)(?:Summary:|$)/i
-    );
-    const summaryMatch = rawResponse.match(
-      /Summary:?\s*(.*?)(?:\n|$)/i
-    );
-    const metaDescriptionMatch = rawResponse.match(
-      /Meta Description:?\s*(.*?)(?:\n|$)/i
-    );
-    const keywordsMatch = rawResponse.match(
-      /Keywords:?\s*([\s\S]*?)(?:\n\n|$)/i
-    );
-
-    // Create the object with extracted data
-    const object = {
-      title:
-        titleMatch && titleMatch[1]
-          ? titleMatch[1].trim()
-          : body.title,
-      content:
-        contentMatch && contentMatch[1] ? contentMatch[1].trim() : "",
-      summary:
-        summaryMatch && summaryMatch[1] ? summaryMatch[1].trim() : "",
-      meta_description:
-        metaDescriptionMatch && metaDescriptionMatch[1]
-          ? metaDescriptionMatch[1].trim()
-          : "",
-      keywords:
-        keywordsMatch && keywordsMatch[1]
-          ? keywordsMatch[1]
-              .trim()
-              .split(/,\s*/)
-              .map((k) => k.trim())
-          : [body.title, "trending news", "latest updates"],
-    };
+      temperature: 0.4,
+      frequencyPenalty: 0.5,
+      presencePenalty: 0.5,
+      system:
+        "You are an expert in SEO and writing articles that generate organic traffic. Write an article that will rank well on Google and attract readers interested in trending news. Ensure the meta description is under 160 characters.",
+      maxRetries: 3,
+    });
 
     const slug = generateSlug(object.title);
 
@@ -368,58 +197,20 @@ export async function POST(req: Request) {
 
     revalidateTag("articles");
 
-    return Response.json(
-      {
-        message: "Article generated",
-        object,
-      },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
-        },
-      }
-    );
+    return Response.json({
+      message: "Article generated",
+      object,
+    });
   } catch (error) {
     console.error("Error:", error);
-
-    // Improved error response with more details
-    let errorMessage = "Internal server error";
-    let statusCode = 500;
-
-    if (
-      error?.message?.includes("429") ||
-      error?.error?.code === 429
-    ) {
-      errorMessage =
-        "API rate limit exceeded. Please try again in a few minutes.";
-      statusCode = 429;
-    }
-
     return NextResponse.json(
-      {
-        message: errorMessage,
-        details: error?.message || "Unknown error",
-      },
-      {
-        status: statusCode,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
-        },
-      }
+      { message: "Internal server error" },
+      { status: 500 }
     );
   }
 }
 
 export async function GET(req: Request) {
-  console.log("GET /api/articles");
   const supabase = await createClient();
   const url = new URL(req.url);
   type SortKey = "created_at" | "published_at" | "title";
@@ -471,19 +262,7 @@ export async function GET(req: Request) {
       : [];
 
     revalidateTag("articles");
-    return NextResponse.json(
-      { items: normalizedArticles },
-      {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
-        },
-      }
-    );
+    return NextResponse.json({ items: normalizedArticles });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
@@ -494,7 +273,7 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const { isAdmin, error: authError } = await checkAdminAccess(req);
+  const { isAdmin, error: authError } = await checkAdminAccess();
   if (!isAdmin) {
     return authError;
   }
@@ -505,16 +284,7 @@ export async function PATCH(req: Request) {
   if (!body.title || !body.approx_traffic) {
     return NextResponse.json(
       { message: "All fields are required." },
-      {
-        status: 422,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
-        },
-      }
+      { status: 422 }
     );
   }
 
@@ -527,31 +297,12 @@ export async function PATCH(req: Request) {
 
   if (error) {
     console.error(error);
-    return NextResponse.json(
-      { message: `Error editing tend: ${error}` },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
-        },
-      }
-    );
+    return NextResponse.json({
+      message: `Error editing tend: ${error}`,
+    });
   }
 
   revalidateTag("trends");
 
-  return NextResponse.json(
-    { data },
-    {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods":
-          "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
-    }
-  );
+  return NextResponse.json({ data });
 }

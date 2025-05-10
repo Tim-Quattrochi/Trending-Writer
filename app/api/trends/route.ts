@@ -3,18 +3,22 @@ import { createClient } from "@/supabase/server";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { checkAdminAccess } from "@/lib/auth";
+const { XMLParser } = await import("fast-xml-parser");
 
 async function fetchRSS(url: string) {
   const response = await fetch(url, { next: { tags: ["trends"] } });
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+
   return await response.text();
 }
 
 interface HtNewsItem {
   "ht:news_item_title": string;
   "ht:news_item_url": string;
+  "ht:news_item_picture"?: string;
+  "ht:news_item_source"?: string;
 }
 
 interface RssItem {
@@ -43,7 +47,6 @@ interface ParsedItem {
 }
 
 async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
-  const { XMLParser } = await import("fast-xml-parser");
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "",
@@ -76,6 +79,20 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
     ) {
       // Try enclosure tag with image type
       picture = item["enclosure"].url;
+    }
+
+    // Try to get the first news_item_picture if available
+    if (!picture && item["ht:news_item"]) {
+      if (Array.isArray(item["ht:news_item"])) {
+        // If there are multiple news items, try to get the picture from the first one
+        const firstNewsItem = item["ht:news_item"][0];
+        if (firstNewsItem["ht:news_item_picture"]) {
+          picture = firstNewsItem["ht:news_item_picture"];
+        }
+      } else if (item["ht:news_item"]["ht:news_item_picture"]) {
+        // If there's only one news item, try to get its picture
+        picture = item["ht:news_item"]["ht:news_item_picture"];
+      }
     }
 
     // Attempt to extract image from news item content if still null
@@ -183,6 +200,7 @@ export async function POST(req: Request) {
 
     try {
       const rssContent = await fetchRSS(rssUrl);
+      console.log("rssContent", rssContent);
       const newItems = await parseRSS(rssContent);
 
       const newTrends = [];
