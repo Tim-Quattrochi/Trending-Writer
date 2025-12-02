@@ -30,12 +30,10 @@ export function ArticleDisplay() {
   const [articles, setArticles] = useState<ArticlesResponse>({
     items: [],
   });
-  const [selectedArticle, setSelectedArticle] =
-    useState<Article | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingArticle, setEditingArticle] =
-    useState<Article | null>(null);
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
 
   const { toast } = useToast();
 
@@ -55,9 +53,7 @@ export function ArticleDisplay() {
       }
     } catch (error) {
       console.error("Error fetching articles:", error);
-      setError(
-        (error as Error).message || "Failed to fetch articles"
-      );
+      setError((error as Error).message || "Failed to fetch articles");
       toast({
         variant: "destructive",
         title: "Error",
@@ -75,10 +71,7 @@ export function ArticleDisplay() {
       fetchArticles();
     };
 
-    window.addEventListener(
-      ARTICLE_GENERATED_EVENT,
-      handleArticleGenerated
-    );
+    window.addEventListener(ARTICLE_GENERATED_EVENT, handleArticleGenerated);
 
     return () => {
       window.removeEventListener(
@@ -113,16 +106,13 @@ export function ArticleDisplay() {
 
   const handleSaveArticle = async (updatedArticle: Article) => {
     try {
-      const response = await fetch(
-        `/api/articles/${updatedArticle.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedArticle),
-        }
-      );
+      const response = await fetch(`/api/articles/${updatedArticle.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedArticle),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update article");
@@ -171,17 +161,14 @@ export function ArticleDisplay() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to post to Facebook"
-        );
+        throw new Error(errorData.error || "Failed to post to Facebook");
       }
 
       const data = await response.json();
 
       toast({
         title: "Posted to Facebook",
-        description:
-          "Your article has been successfully posted to Facebook.",
+        description: "Your article has been successfully posted to Facebook.",
       });
     } catch (error) {
       console.error("Error posting to Facebook:", error);
@@ -199,100 +186,150 @@ export function ArticleDisplay() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Generated Articles</h2>
-        <Button onClick={handleViewAllArticles} variant="outline">
-          <Eye className="h-4 w-4 mr-2" />
-          View All Articles
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-3xl font-semibold tracking-tight">
+            Generated Articles
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Browse and preview the latest AI-written pieces from your trends
+          </p>
+        </div>
+        <Button
+          onClick={handleViewAllArticles}
+          variant="outline"
+          className="gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          View all articles
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card className="h-full border-none shadow-md">
-            <CardHeader className="bg-muted/50">
-              <CardTitle className="text-lg">
-                Recent Articles
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar list */}
+        <div className="lg:col-span-1">
+          <Card className="h-full border-border/60 bg-card/50 backdrop-blur">
+            <CardHeader className="border-b bg-muted/40 py-3">
+              <CardTitle className="text-sm font-medium tracking-wide text-muted-foreground">
+                Recent articles
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[500px]">
-                <div className="space-y-1 p-2">
+              <ScrollArea className="h-[520px]">
+                <div className="flex flex-col gap-1 p-2">
                   {articles &&
-                    articles.items.map((article) => (
-                      <Button
-                        key={article.id}
-                        variant={
-                          selectedArticle?.id === article.id
-                            ? "default"
-                            : "ghost"
-                        }
-                        className="w-full justify-start text-left h-auto py-3"
-                        onClick={() => setSelectedArticle(article)}
-                      >
-                        <div className="truncate">
-                          <p className="font-medium truncate">
-                            {article.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(
-                              article.created_at || ""
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </Button>
-                    ))}
+                    articles.items.map((article) => {
+                      const isActive = selectedArticle?.id === article.id;
+                      return (
+                        <button
+                          key={article.id}
+                          type="button"
+                          onClick={() => setSelectedArticle(article)}
+                          className={`flex w-full items-start gap-2 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted/70 ${
+                            isActive ? "bg-muted/80 ring-1 ring-primary/30" : ""
+                          }`}
+                        >
+                          <div className="mt-0.5 h-2 w-2 rounded-full bg-primary/60" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {article.title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {article.created_at
+                                ? new Date(
+                                    article.created_at
+                                  ).toLocaleDateString()
+                                : "Unknown date"}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
         </div>
 
-        <div className="md:col-span-2">
+        {/* Main article preview */}
+        <div className="lg:col-span-2">
           {selectedArticle && (
-            <Card className="h-full border-none shadow-md">
-              <CardHeader className="bg-muted/50 pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle>{selectedArticle.title}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="flex items-center gap-1"
-                    >
-                      <Calendar className="h-3 w-3" />
-                      {new Date(
-                        selectedArticle.created_at
-                          ? new Date(
-                              selectedArticle.created_at
-                            ).toLocaleDateString()
-                          : "Unknown Date"
-                      ).toLocaleDateString()}
-                    </Badge>
+            <Card className="h-full border-border/60 bg-card/60 shadow-sm">
+              <CardHeader className="space-y-4 border-b bg-gradient-to-r from-background via-background to-muted/40 pb-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="text-2xl font-semibold leading-tight">
+                      {selectedArticle.title}
+                    </CardTitle>
+                    {selectedArticle.meta_description && (
+                      <p className="text-sm text-muted-foreground max-w-2xl">
+                        {selectedArticle.meta_description}
+                      </p>
+                    )}
                     {selectedArticle.meta_keywords && (
-                      <Badge variant="secondary">
-                        {selectedArticle.meta_keywords}
-                      </Badge>
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {selectedArticle.meta_keywords
+                          .split(",")
+                          .map((kw) => kw.trim())
+                          .filter(Boolean)
+                          .map((kw) => (
+                            <Badge
+                              key={kw}
+                              variant="secondary"
+                              className="text-[11px] font-normal"
+                            >
+                              {kw}
+                            </Badge>
+                          ))}
+                      </div>
                     )}
                   </div>
+
+                  <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+                    <Badge
+                      variant="outline"
+                      className="flex items-center gap-1 text-[11px]"
+                    >
+                      <Calendar className="h-3 w-3" />
+                      {selectedArticle.created_at
+                        ? new Date(
+                            selectedArticle.created_at
+                          ).toLocaleDateString()
+                        : "Unknown date"}
+                    </Badge>
+                  </div>
                 </div>
+
+                {selectedArticle.image_url && (
+                  <div className="relative mt-2 overflow-hidden rounded-lg border bg-muted/40">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={selectedArticle.image_url}
+                      alt={selectedArticle.title || "Article image"}
+                      className="h-56 w-full object-cover transition-transform duration-700 hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
               </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[450px] pr-4">
-                  <div className="prose dark:prose-invert max-w-none">
+              <CardContent className="space-y-4 pt-4">
+                <ScrollArea className="h-[420px] pr-4">
+                  <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none leading-relaxed">
                     {selectedArticle.content
                       .split("\n")
+                      .filter((p) => p.trim().length > 0)
                       .map((paragraph, idx) => (
                         <p key={idx}>{paragraph}</p>
                       ))}
                   </div>
                 </ScrollArea>
-                <Separator className="my-4" />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <Separator className="my-2" />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="gap-1"
+                      className="gap-1 px-2 text-xs"
                     >
                       <ThumbsUp className="h-4 w-4" />
                       {selectedArticle?.likes || 0}
@@ -300,33 +337,31 @@ export function ArticleDisplay() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="gap-1"
+                      className="gap-1 px-2 text-xs"
                     >
                       <MessageSquare className="h-4 w-4" />
                       {selectedArticle?.comments || 0}
                     </Button>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        router.push(
-                          `/articles/${selectedArticle.slug}`
-                        )
+                        router.push(`/articles/${selectedArticle.slug}`)
                       }
+                      className="gap-1"
                     >
-                      Read Full Article
+                      Read full article
                     </Button>
                     {selectedArticle && (
                       <Button
-                        onClick={() =>
-                          handlePostToFacebook(selectedArticle)
-                        }
+                        onClick={() => handlePostToFacebook(selectedArticle)}
                         variant="default"
                         size="sm"
+                        className="gap-1"
                       >
-                        <Facebook className="h-4 w-4 mr-2" />
+                        <Facebook className="h-4 w-4" />
                         Share on Facebook
                       </Button>
                     )}
