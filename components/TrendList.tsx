@@ -2,13 +2,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import {
-  Edit,
-  Trash2,
-  Loader2,
-  FilePlus2,
-  Loader,
-} from "lucide-react";
+import { Edit, Trash2, Loader2, FilePlus2, Loader } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/hooks/use-toast";
@@ -69,16 +63,12 @@ export default function TrendList({
 }: TrendListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dialogMode, setDialogMode] = useState<
-    "edit" | "delete" | null
-  >(null);
+  const [dialogMode, setDialogMode] = useState<"edit" | "delete" | null>(null);
 
-  const [editingTrend, setEditingTrend] = useState<TrendItem | null>(
+  const [editingTrend, setEditingTrend] = useState<TrendItem | null>(null);
+  const [generatingArticle, setGeneratingArticle] = useState<string | null>(
     null
   );
-  const [generatingArticle, setGeneratingArticle] = useState<
-    string | null
-  >(null);
 
   const pathname = usePathname();
 
@@ -128,9 +118,7 @@ export default function TrendList({
         const errorData = await response.json();
         console.log("Error response:", errorData);
         throw new Error(
-          errorData.error ||
-            errorData.message ||
-            "Failed to generate article"
+          errorData.error || errorData.message || "Failed to generate article"
         );
       }
 
@@ -148,8 +136,7 @@ export default function TrendList({
       console.error("Error generating article:", error);
       toast({
         title: "Error generating article",
-        description:
-          error instanceof Error ? error.message : String(error),
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {
@@ -158,9 +145,7 @@ export default function TrendList({
     }
   };
 
-  const handleSaveEdit = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSaveEdit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingTrend) return;
 
@@ -236,131 +221,184 @@ export default function TrendList({
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Traffic</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>News Items</TableHead>
-                  <TableHead className="text-right">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trends?.map((trend) => (
-                  <TableRow key={trend.id}>
-                    <TableCell className="font-medium">
-                      {trend.title}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {trend.approx_traffic}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(
-                        trend.publication_date
-                      ).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="max-w-md">
-                      <ScrollArea className="h-24 rounded-md border p-2">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {trend.news_items}
-                        </ReactMarkdown>
-                      </ScrollArea>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditClick(trend)}
-                        >
-                          <Edit className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteClick(trend)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleGenerateArticle(trend)}
-                          disabled={generatingArticle === trend.id}
-                        >
-                          {generatingArticle === trend.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <FilePlus2 className="h-4 w-4 mr-1" />
-                          )}
-                          <span className="hidden sm:inline">
-                            Generate
-                          </span>
-                        </Button>
-                      </div>
-                    </TableCell>
+          <div className="hidden md:block">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Traffic</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>News Items</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {trends?.map((trend) => (
+                    <TableRow key={trend.id}>
+                      <TableCell className="font-medium">
+                        {trend.title}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{trend.approx_traffic}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(trend.publication_date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="max-w-md">
+                        <ScrollArea className="h-24 rounded-md border p-2">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {trend.news_items}
+                          </ReactMarkdown>
+                        </ScrollArea>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditClick(trend)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteClick(trend)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleGenerateArticle(trend)}
+                            disabled={generatingArticle === trend.id}
+                          >
+                            {generatingArticle === trend.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FilePlus2 className="h-4 w-4 mr-1" />
+                            )}
+                            <span className="hidden sm:inline">Generate</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <div className="space-y-4 p-4 md:hidden">
+            {trends?.map((trend) => (
+              <div
+                key={trend.id}
+                className="rounded-2xl border bg-card/90 p-4 shadow-sm"
+              >
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-base font-semibold">{trend.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(trend.publication_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <Badge variant="outline">{trend.approx_traffic}</Badge>
+                    {trend.hash && (
+                      <span className="rounded-full bg-muted/60 px-2 py-1">
+                        {trend.hash.slice(0, 10)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="rounded-xl border bg-muted/40 p-3 text-sm">
+                    <ScrollArea className="max-h-48">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {trend.news_items}
+                      </ReactMarkdown>
+                    </ScrollArea>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 min-w-[120px]"
+                    onClick={() => handleEditClick(trend)}
+                  >
+                    <Edit className="h-4 w-4" /> Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 min-w-[120px]"
+                    onClick={() => handleDeleteClick(trend)}
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1 min-w-[120px]"
+                    onClick={() => handleGenerateArticle(trend)}
+                    disabled={generatingArticle === trend.id}
+                  >
+                    {generatingArticle === trend.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FilePlus2 className="h-4 w-4" />
+                    )}
+                    <span className="ml-2">Generate</span>
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
 
       {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
+        <Pagination className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <PaginationContent className="flex flex-wrap justify-center gap-1">
             <PaginationItem>
               <PaginationPrevious
-                href={`${pathname}?page=${Math.max(
-                  1,
-                  currentPage - 1
-                )}`}
+                href={`${pathname}?page=${Math.max(1, currentPage - 1)}`}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (page) => {
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  Math.abs(page - currentPage) <= 1
-                ) {
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href={`${pathname}?page=${page}`}
-                        isActive={page === currentPage}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                }
-
-                if (
-                  (page === 2 && currentPage > 3) ||
-                  (page === totalPages - 1 &&
-                    currentPage < totalPages - 2)
-                ) {
-                  return (
-                    <PaginationItem key={page + "-ellipsis"}>
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  );
-                }
-                return null;
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+              if (
+                page === 1 ||
+                page === totalPages ||
+                Math.abs(page - currentPage) <= 1
+              ) {
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href={`${pathname}?page=${page}`}
+                      isActive={page === currentPage}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
               }
-            )}
+
+              if (
+                (page === 2 && currentPage > 3) ||
+                (page === totalPages - 1 && currentPage < totalPages - 2)
+              ) {
+                return (
+                  <PaginationItem key={page + "-ellipsis"}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+              return null;
+            })}
           </PaginationContent>
-          <PaginationContent>
+          <PaginationContent className="flex justify-center">
             {currentPage < totalPages && (
               <PaginationItem>
                 <PaginationNext
@@ -435,18 +473,15 @@ export default function TrendList({
           <DialogHeader>
             <DialogTitle>Delete Trend</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this trend? This action
-              cannot be undone.
+              Are you sure you want to delete this trend? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-            >
+            <Button variant="destructive" onClick={handleConfirmDelete}>
               Delete
             </Button>
           </DialogFooter>

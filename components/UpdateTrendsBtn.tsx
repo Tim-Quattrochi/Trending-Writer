@@ -5,7 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { refreshTrendsAction } from "@/app/(dashboard)/actions";
+import { refreshTrendsAction } from "@/app/dashboard/actions";
 
 export default function UpdateTrendsButton() {
   const [isLoading, setIsLoading] = useState(false);

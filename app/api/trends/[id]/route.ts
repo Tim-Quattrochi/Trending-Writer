@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { editTrends } from "@/app/(dashboard)/actions";
+import { editTrends } from "@/app/dashboard/actions";
 import { createClient } from "@/supabase/server";
 import { checkAdminAccess } from "@/lib/auth";
 

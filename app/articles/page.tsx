@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Ghost } from "lucide-react";
 import ArticleList from "@/components/ArticleList";
-import { getAllArticles } from "../(dashboard)/actions";
+import { getAllArticles } from "@/app/dashboard/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -35,11 +35,11 @@ export default async function ArticlesPage() {
           <Ghost className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
           <h1 className="text-3xl font-semibold">No dispatches yet</h1>
           <p className="mb-6 text-muted-foreground">
-            Head back to the dashboard to generate your first Daily Oddities
-            story from a trending topic.
+            Fresh stories are on the way. Check back soon for quirky takes on
+            trending topics.
           </p>
           <Button asChild>
-            <Link href="/">Return to dashboard</Link>
+            <Link href="/">Back to home</Link>
           </Button>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default async function ArticlesPage() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="gap-2">
-              <Link href="/">Back to dashboard</Link>
+              <Link href="/">Back home</Link>
             </Button>
           </div>
         </div>

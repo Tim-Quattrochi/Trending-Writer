@@ -90,34 +90,34 @@ export default async function Dashboard({
   const { trends, total } = result;
 
   console.log(trends.length);
-  // if (trends.length === 0) {
-  //   await updateTrends();
-  //   return (
-  //     <div className="container mx-auto py-8">
-  //       <Alert>
-  //         <AlertTitle>No Trends Found</AlertTitle>
-  //         <AlertDescription>
-  //           There are currently no trending topics. Please check back later or
-  //           click the &quot;Check for new Trends&quot; button to manually
-  //           refresh.
-  //         </AlertDescription>
-  //       </Alert>
-  //     </div>
-  //   );
-  // }
+  if (trends.length === 0) {
+    await updateTrends();
+    return (
+      <div className="container mx-auto py-8">
+        <Alert>
+          <AlertTitle>No Trends Found</AlertTitle>
+          <AlertDescription>
+            There are currently no trending topics. Please check back later or
+            click the &quot;Check for new Trends&quot; button to manually
+            refresh.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold mb-8 flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-bold flex items-center gap-4">
             <UpdateTrendsButton />
-            Trending Topics Dashboard
+            <span className="leading-tight">Trending Topics Dashboard</span>
           </h1>
         </div>
         <Separator />
         <Tabs defaultValue="trends" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex flex-wrap gap-2 overflow-x-auto">
             <TabsTrigger value="trends">Trending Topics</TabsTrigger>
             <TabsTrigger value="articles">Generated Articles</TabsTrigger>
           </TabsList>

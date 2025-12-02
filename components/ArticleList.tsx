@@ -85,7 +85,7 @@ export default function ArticleList({ articles }: { articles: Article[] }) {
 
       <div className="flex flex-col gap-4 rounded-2xl border bg-card/80 p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-1 flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[220px]">
+          <div className="relative w-full min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search titles"
@@ -95,13 +95,13 @@ export default function ArticleList({ articles }: { articles: Article[] }) {
               aria-label="Search articles"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select
               value={sortBy}
               onValueChange={(value) => setSortBy(value as SortByOptions)}
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -114,7 +114,7 @@ export default function ArticleList({ articles }: { articles: Article[] }) {
         </div>
 
         <div
-          className="flex items-center gap-2"
+          className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end"
           role="group"
           aria-label="Toggle layout"
         >
@@ -122,7 +122,7 @@ export default function ArticleList({ articles }: { articles: Article[] }) {
             type="button"
             variant={viewMode === "grid" ? "default" : "ghost"}
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-1 min-w-[140px] sm:min-w-0 sm:flex-none"
             onClick={() => setViewMode("grid")}
           >
             <LayoutGrid className="h-4 w-4" /> Grid
@@ -131,7 +131,7 @@ export default function ArticleList({ articles }: { articles: Article[] }) {
             type="button"
             variant={viewMode === "list" ? "default" : "ghost"}
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-1 min-w-[140px] sm:min-w-0 sm:flex-none"
             onClick={() => setViewMode("list")}
           >
             <Rows className="h-4 w-4" /> List
