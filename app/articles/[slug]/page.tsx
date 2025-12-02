@@ -12,24 +12,46 @@ import {
 } from "lucide-react";
 import { ClientMarkdown } from "@/components/Markdown";
 import { Article } from "@/app/api/articles/article.types";
+import { Database } from "@/types/types_db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+function getSupabaseClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY; cannot fetch article content."
+    );
+    return null;
+  }
+
+  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+}
 
 export async function generateStaticParams() {
   try {
-    const res = await fetch(`${baseUrl}/articles`);
-    if (!res.ok) {
-      console.error("Failed to fetch article slugs: ", res.status);
+    const supabase = getSupabaseClient();
+    if (!supabase) {
       return [];
     }
-    const data = await res.json();
-    const articles: Article[] = data.items;
 
-    return articles.map((article) => ({
-      slug: article.slug,
-    }));
+    const { data, error } = await supabase
+      .from("articles")
+      .select("slug")
+      .not("slug", "is", null);
+
+    if (error || !data) {
+      console.error("Failed to fetch article slugs from Supabase:", error);
+      return [];
+    }
+
+    return data
+      .filter((article) => article.slug)
+      .map((article) => ({ slug: article.slug as string }));
   } catch (error) {
     console.error("Error in generateStaticParams:", error);
     return [];
@@ -38,23 +60,29 @@ export async function generateStaticParams() {
 
 async function getArticle(slug: string): Promise<Article | null> {
   try {
-    const res = await fetch(`${baseUrl}/articles?slug=${slug}`);
-
-    if (!res.ok) {
-      console.error("Error fetching article: ", res.status);
+    const supabase = getSupabaseClient();
+    if (!supabase) {
       return null;
     }
 
-    const data = await res.json();
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("slug", slug)
+      .limit(1)
+      .maybeSingle();
 
-    if (!data.items || data.items.length === 0) {
+    if (error) {
+      console.error("Error fetching article from Supabase:", error);
+      return null;
+    }
+
+    if (!data) {
       console.error("Article not found");
       return null;
     }
 
-    const article: Article = data.items[0];
-
-    return article;
+    return data as Article;
   } catch (error) {
     console.error("Error fetching article:", error);
     return null;
