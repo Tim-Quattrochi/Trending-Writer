@@ -35,16 +35,11 @@ const articleSchema = z.object({
     .transform((val) => {
       const normalized = val.normalize("NFC").trim();
 
-      const cleaned = normalized.replace(
-        /[\u200B-\u200D\uFEFF]/g,
-        ""
-      );
+      const cleaned = normalized.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
       const charCount = Array.from(cleaned).length;
 
-      return charCount > 200
-        ? cleaned.slice(0, 300) + "..."
-        : cleaned;
+      return charCount > 200 ? cleaned.slice(0, 300) + "..." : cleaned;
     })
 
     .describe(
@@ -57,17 +52,12 @@ const articleSchema = z.object({
       // Normalize the string to NFC form (canonical form)
       const normalized = val.normalize("NFC").trim();
       // Remove hidden or non-printable characters
-      const cleaned = normalized.replace(
-        /[\u200B-\u200D\uFEFF]/g,
-        ""
-      );
+      const cleaned = normalized.replace(/[\u200B-\u200D\uFEFF]/g, "");
 
       const charCount = Array.from(cleaned).length;
 
       // Truncate if needed
-      return charCount > 160
-        ? cleaned.slice(0, 157) + "..."
-        : cleaned;
+      return charCount > 160 ? cleaned.slice(0, 157) + "..." : cleaned;
     })
     .describe(
       "An SEO-friendly meta description for the article (max 160 characters)"
@@ -151,10 +141,7 @@ export async function POST(req: Request) {
 
     const slug = generateSlug(object.title);
 
-    if (
-      !object.meta_description ||
-      object.meta_description.length > 160
-    ) {
+    if (!object.meta_description || object.meta_description.length > 160) {
       object.meta_description = await generateSummaryWithGemini(
         object.content,
         160
@@ -177,9 +164,7 @@ export async function POST(req: Request) {
           image_url: body.image_url,
           slug,
           is_published: body.is_published,
-          published_at: body.is_published
-            ? new Date().toISOString()
-            : null,
+          published_at: body.is_published ? new Date().toISOString() : null,
           meta_description: object.meta_description,
           meta_keywords: object.keywords,
         },
@@ -197,8 +182,18 @@ export async function POST(req: Request) {
 
     revalidateTag("articles");
 
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
     return Response.json({
       message: "Article generated",
+      article: {
+        id: newArticle.id,
+        slug: newArticle.slug,
+        url:
+          baseUrl && newArticle.slug
+            ? `${baseUrl}/articles/${newArticle.slug}`
+            : null,
+      },
       object,
     });
   } catch (error) {
@@ -216,8 +211,7 @@ export async function GET(req: Request) {
   type SortKey = "created_at" | "published_at" | "title";
   const sortParam = url.searchParams.get("sortBy") as SortKey | null;
   const sortBy: SortKey =
-    sortParam &&
-    ["created_at", "published_at", "title"].includes(sortParam)
+    sortParam && ["created_at", "published_at", "title"].includes(sortParam)
       ? sortParam
       : "created_at";
 
