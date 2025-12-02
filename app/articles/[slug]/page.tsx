@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  ArrowLeft,
+  CalendarIcon,
+  Clock,
+  Facebook,
+  Share2,
+  Sparkles,
+  Tag,
+} from "lucide-react";
 import { ClientMarkdown } from "@/components/Markdown";
 import { Article } from "@/app/api/articles/article.types";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarIcon, Clock, Facebook, Tag } from "lucide-react";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -71,6 +78,12 @@ export default async function Page({ params }: { params: { slug: string } }) {
   }
 
   const readingTime = getReadingTime(article.content);
+  const keywords = Array.isArray(article.meta_keywords)
+    ? article.meta_keywords
+    : typeof article.meta_keywords === "string"
+    ? article.meta_keywords.split(",").map((kw) => kw.trim())
+    : [];
+  const relatedKeywords = keywords.slice(0, 6);
 
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
     `${
@@ -79,134 +92,155 @@ export default async function Page({ params }: { params: { slug: string } }) {
   )}`;
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4 md:px-6">
-      <div className="mb-6 flex items-center justify-between gap-3">
+    <div className="container mx-auto max-w-6xl space-y-12 py-12 px-4 md:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <Link
           href="/articles"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-2 text-muted-foreground transition hover:text-foreground"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to all articles
+          <ArrowLeft className="h-4 w-4" /> Back to the dispatch
         </Link>
-
         <Button asChild variant="outline" size="sm" className="gap-2">
-          <a href={fbShareUrl} target="_blank" rel="noopener noreferrer">
-            <Facebook className="h-4 w-4" />
-            Share
+          <a href={fbShareUrl} target="_blank" rel="noreferrer">
+            <Share2 className="h-4 w-4" /> Share
           </a>
         </Button>
       </div>
 
-      <article className="overflow-hidden rounded-2xl border border-border/60 bg-card/60 shadow-sm">
-        <header className="border-b bg-gradient-to-b from-muted/80 via-background to-background px-5 py-7 md:px-8 md:py-9">
+      <section className="overflow-hidden rounded-3xl border bg-card/80 shadow-xl">
+        <div className="space-y-6 px-6 py-10 md:px-10">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary/80">
-                Daily Oddities
-              </p>
-              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-                {article.title}
-              </h1>
-            </div>
-
+            <p className="eyebrow text-primary/80">Daily Oddities Dispatch</p>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+              {article.title}
+            </h1>
             {article.summary && (
-              <p className="max-w-2xl text-sm md:text-base text-muted-foreground">
+              <p className="max-w-3xl text-lg text-muted-foreground">
                 {article.summary}
               </p>
             )}
+          </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-muted-foreground">
-              <div className="inline-flex items-center gap-1 rounded-full border bg-background/60 px-3 py-1">
-                <CalendarIcon className="h-3 w-3" />
-                <time dateTime={article.created_at}>
-                  {article.created_at &&
-                    new Date(article.created_at).toLocaleDateString("en-US", {
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-1.5">
+              <CalendarIcon className="h-4 w-4" />
+              <time dateTime={article.created_at}>
+                {article.created_at
+                  ? new Date(article.created_at).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
-                    })}
-                </time>
-              </div>
-              <div className="inline-flex items-center gap-1 rounded-full border bg-background/60 px-3 py-1">
-                <Clock className="h-3 w-3" />
-                <span>{readingTime} min read</span>
-              </div>
-              {article.meta_keywords && article.meta_keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {article.meta_keywords.slice(0, 3).map((keyword, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="rounded-full text-[11px] font-normal"
-                    >
-                      {keyword}
-                    </Badge>
-                  ))}
-                  {article.meta_keywords.length > 3 && (
-                    <span className="text-[11px] text-muted-foreground">
-                      +{article.meta_keywords.length - 3} more
-                    </span>
-                  )}
-                </div>
-              )}
+                    })
+                  : "Recently"}
+              </time>
             </div>
+            <div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-1.5">
+              <Clock className="h-4 w-4" /> {readingTime} min read
+            </div>
+            {keywords.length > 0 && (
+              <div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-1.5">
+                <Sparkles className="h-4 w-4" /> Trending oddity
+              </div>
+            )}
           </div>
-        </header>
+        </div>
 
-        {article.image_url && (
-          <div className="relative h-[260px] w-full overflow-hidden border-b bg-muted/40 md:h-[360px]">
+        {article.image_url ? (
+          <div className="relative h-[320px] w-full overflow-hidden border-y bg-muted/40 md:h-[420px]">
             <Image
-              src={article.image_url || "/placeholder.svg"}
+              src={article.image_url}
               alt={article.title}
               fill
-              className="object-cover transition-transform duration-700 hover:scale-[1.03]"
+              className="object-cover transition duration-700 hover:scale-[1.03]"
               priority
             />
           </div>
+        ) : (
+          <div className="h-[260px] w-full border-t bg-gradient-to-r from-[#fde68a] via-[#fb923c] to-[#f97316]" />
         )}
+      </section>
 
-        <div className="px-5 py-7 md:px-8 md:py-8">
-          <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none leading-relaxed">
+      <section className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(260px,1fr)]">
+        <article className="rounded-3xl border bg-card/90 px-6 py-8 shadow-sm md:px-10">
+          <div className="article-content prose prose-lg dark:prose-invert max-w-none">
             <ClientMarkdown
               content={article.content}
               className="article-content"
             />
           </div>
+        </article>
 
-          <Separator className="my-8" />
+        <aside className="space-y-6 rounded-3xl border bg-muted/40 p-6">
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Dispatch meta
+            </h2>
+            <div className="rounded-2xl border bg-background/70 p-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">About this story</p>
+              <p className="mt-2 leading-relaxed">
+                Generated from Google Trends RSS and polished for the Daily
+                Oddities Facebook community. Share it directly with members or
+                remix into a post.
+              </p>
+            </div>
+          </div>
 
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            {article.meta_keywords && article.meta_keywords.length > 0 && (
-              <div>
-                <h3 className="mb-2 flex items-center text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                  <Tag className="mr-2 h-3 w-3" />
-                  Topics
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {article.meta_keywords.map((keyword, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="rounded-full px-3 py-1 text-xs font-normal"
-                    >
-                      {keyword}
-                    </Badge>
-                  ))}
-                </div>
+          {relatedKeywords.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                <Tag className="h-3.5 w-3.5" /> Topics
               </div>
-            )}
+              <div className="flex flex-wrap gap-2">
+                {relatedKeywords.map((keyword) => (
+                  <Badge
+                    key={keyword}
+                    variant="secondary"
+                    className="rounded-full px-4 py-1 text-xs"
+                  >
+                    {keyword}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
 
-            <div className="flex items-center gap-3 md:justify-end">
-              <Button asChild variant="outline" size="sm" className="gap-2">
-                <a href={fbShareUrl} target="_blank" rel="noopener noreferrer">
-                  <Facebook className="h-4 w-4" />
-                  Share on Facebook
+          <div className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Actions
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button asChild variant="outline" className="gap-2">
+                <a href={fbShareUrl} target="_blank" rel="noreferrer">
+                  <Facebook className="h-4 w-4" /> Share on Facebook
                 </a>
+              </Button>
+              <Button asChild variant="ghost" className="gap-2">
+                <Link href="/articles">Browse more oddities</Link>
               </Button>
             </div>
           </div>
+        </aside>
+      </section>
+
+      <section className="rounded-3xl border bg-card/60 p-8 text-center shadow-sm">
+        <p className="eyebrow text-primary">Stay curious</p>
+        <h2 className="mt-3 text-3xl font-semibold">
+          Daily drops for the Daily Oddities crowd
+        </h2>
+        <p className="mx-auto mt-2 max-w-3xl text-muted-foreground">
+          New trends roll in throughout the day. Keep the tab open, refresh the
+          dashboard, or subscribe to the Facebook group to never miss a curious
+          cultural blip.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button asChild className="gap-2">
+            <Link href="/">Return to dashboard</Link>
+          </Button>
+          <Button asChild variant="outline" className="gap-2">
+            <Link href="/articles">View all dispatches</Link>
+          </Button>
         </div>
-      </article>
+      </section>
     </div>
   );
 }

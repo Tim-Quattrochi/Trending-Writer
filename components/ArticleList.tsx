@@ -1,19 +1,8 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  ChangeEvent,
-  ChangeEventHandler,
-} from "react";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "./ui/card";
+import { useMemo, useState } from "react";
+import { Filter, LayoutGrid, Rows, Search } from "lucide-react";
+import ArticleCard from "./ArticleCard";
 import {
   Select,
   SelectContent,
@@ -21,129 +10,164 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import {
-  Calendar,
-  ThumbsUp,
-  MessageSquare,
-  ArrowRight,
-} from "lucide-react";
-import ArticleCard from "./ArticleCard";
+import { cn } from "@/lib/utils";
+import { Article } from "@/app/api/articles/article.types";
 
-import { useToast } from "@/hooks/use-toast";
+type SortByOptions = "created_at" | "alphabetical" | "published_at";
 
-interface Article {
-  id: number;
-  title: string;
-  content: string;
-  created_at: string;
-  likes?: number;
-  comments?: number;
-  keyWords?: string;
-  slug: string;
-}
-
-type SortByOptions =
-  | "created_at"
-  | "meta_keyword"
-  | "published_at"
-  | "is_published";
-
-export default function ArticleList({
-  articles,
-}: {
-  articles: Article[];
-}) {
+export default function ArticleList({ articles }: { articles: Article[] }) {
   const [sortBy, setSortBy] = useState<SortByOptions>("created_at");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { toast } = useToast();
+  const normalizedArticles = useMemo(() => articles ?? [], [articles]);
 
-  const sortedArticles = [...articles].sort((a, b) => {
-    if (sortBy === "created_at") {
-      return (
-        new Date(b.created_at).getTime() -
-        new Date(a.created_at).getTime()
-      );
-    }
-    return 0;
+  const sortedArticles = useMemo(() => {
+    return [...normalizedArticles]
+      .filter((article) =>
+        article.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => {
+        if (sortBy === "alphabetical") {
+          return a.title.localeCompare(b.title);
+        }
+        if (sortBy === "published_at" && a.published_at && b.published_at) {
+          return (
+            new Date(b.published_at).getTime() -
+            new Date(a.published_at).getTime()
+          );
+        }
+        return (
+          new Date(b.created_at ?? "").getTime() -
+          new Date(a.created_at ?? "").getTime()
+        );
+      });
+  }, [normalizedArticles, searchTerm, sortBy]);
+
+  const featured = sortedArticles[0];
+  const remainder = sortedArticles.slice(1);
+
+  const keywordSet = new Set<string>();
+  normalizedArticles.forEach((article) => {
+    const keywords = Array.isArray(article.meta_keywords)
+      ? article.meta_keywords
+      : typeof article.meta_keywords === "string"
+      ? article.meta_keywords.split(",").map((kw) => kw.trim())
+      : [];
+    keywords.filter(Boolean).forEach((kw) => keywordSet.add(kw));
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">All Articles</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Sort by:
-          </span>
-          <Select
-            value={sortBy}
-            onValueChange={(value) =>
-              setSortBy(value as SortByOptions)
-            }
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="created_at">Date Created</SelectItem>
-              <SelectItem value="meta_keyword">Keyword</SelectItem>
-            </SelectContent>
-          </Select>
+    <section className="space-y-10">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <p className="eyebrow text-primary">Fresh dispatches</p>
+          <h2 className="text-3xl font-semibold tracking-tight">
+            Latest from Daily Oddities
+          </h2>
+          <p className="max-w-2xl text-muted-foreground">
+            Curated oddities sourced from Google Trends RSS and shaped into
+            playful essays for the Daily Oddities community.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+          <Badge variant="outline" className="rounded-full px-4 py-1">
+            {articles.length} articles
+          </Badge>
+          <Badge variant="secondary" className="rounded-full px-4 py-1">
+            {keywordSet.size} quirky topics
+          </Badge>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedArticles.map((article) => (
-          <Card
-            key={article.id}
-            className="flex flex-col h-full border-none shadow-md hover:shadow-lg transition-shadow"
+      <div className="flex flex-col gap-4 rounded-2xl border bg-card/80 p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-1 flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search titles"
+              className="pl-9"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              aria-label="Search articles"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as SortByOptions)}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Newest first</SelectItem>
+                <SelectItem value="alphabetical">Alphabetical</SelectItem>
+                <SelectItem value="published_at">Publication date</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div
+          className="flex items-center gap-2"
+          role="group"
+          aria-label="Toggle layout"
+        >
+          <Button
+            type="button"
+            variant={viewMode === "grid" ? "default" : "ghost"}
+            size="sm"
+            className="gap-2"
+            onClick={() => setViewMode("grid")}
           >
-            <CardHeader className="bg-muted/50 pb-4">
-              <CardTitle className="line-clamp-2">
-                {article.title}
-              </CardTitle>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge
-                  variant="outline"
-                  className="flex items-center gap-1"
-                >
-                  <Calendar className="h-3 w-3" />
-                  {new Date(article.created_at).toLocaleDateString()}
-                </Badge>
-                {article.keyWords && (
-                  <Badge variant="secondary">
-                    {article.keyWords}
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-muted-foreground line-clamp-4">
-                {article.content.substring(0, 200)}...
-              </p>
-            </CardContent>
-            <CardFooter className="flex items-center justify-between pt-2 border-t">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center text-sm text-muted-foreground">
-                  <ThumbsUp className="h-4 w-4 mr-1" />
-                  {article.likes || 0}
-                </span>
-                <span className="flex items-center text-sm text-muted-foreground">
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  {article.comments || 0}
-                </span>
-              </div>
-              <Link href={`/articles/${article.slug}`} passHref>
-                <Button variant="ghost" size="sm" className="gap-1">
-                  Read <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        ))}
+            <LayoutGrid className="h-4 w-4" /> Grid
+          </Button>
+          <Button
+            type="button"
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            className="gap-2"
+            onClick={() => setViewMode("list")}
+          >
+            <Rows className="h-4 w-4" /> List
+          </Button>
+        </div>
       </div>
-    </div>
+
+      {featured && <ArticleCard article={featured} variant="featured" />}
+
+      {remainder.length > 0 ? (
+        <div
+          className={cn(
+            "gap-6",
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+              : "flex flex-col"
+          )}
+        >
+          {remainder.map((article) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              variant={viewMode === "grid" ? "grid" : "list"}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed bg-muted/40 px-6 py-16 text-center">
+          <p className="text-lg font-medium text-foreground">
+            No additional stories match that filter.
+          </p>
+          <p className="text-muted-foreground">
+            Try clearing the search or selecting another sort option.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
