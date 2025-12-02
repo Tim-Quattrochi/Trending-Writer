@@ -81,7 +81,7 @@ export default function ArticleCard({
         >
           {article.image_url ? (
             <Image
-              src={article.image_url}
+              src={!article.image_url ? "/unnamed.jpg" : article.image_url}
               alt={article.title}
               width={900}
               height={600}

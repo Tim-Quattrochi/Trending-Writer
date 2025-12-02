@@ -266,13 +266,13 @@ export function ArticleDisplay() {
                         {selectedArticle.meta_description}
                       </p>
                     )}
-                    {selectedArticle.meta_keywords && (
+                    {typeof selectedArticle.meta_keywords === "string" && (
                       <div className="flex flex-wrap gap-1 pt-1">
                         {selectedArticle.meta_keywords
                           .split(",")
-                          .map((kw) => kw.trim())
+                          .map((kw: string) => kw.trim())
                           .filter(Boolean)
-                          .map((kw) => (
+                          .map((kw: string) => (
                             <Badge
                               key={kw}
                               variant="secondary"

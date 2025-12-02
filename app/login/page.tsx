@@ -14,25 +14,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { login, signup } from "./actions";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [signupState, signupAction, pendingSignup] = useActionState(
-    signup,
-    { message: "" }
-  );
-  const [loginState, loginAction, pendingLogin] = useActionState(
-    login,
-    { message: "" }
-  );
+  const [signupState, signupAction, pendingSignup] = useActionState(signup, {
+    message: "",
+  });
+  const [loginState, loginAction, pendingLogin] = useActionState(login, {
+    message: "",
+  });
   const router = useRouter();
 
   return (
@@ -55,12 +48,7 @@ export default function LoginPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                    />
+                    <Input id="email" name="email" type="email" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
@@ -79,7 +67,7 @@ export default function LoginPage() {
                 >
                   {isLoading ? "Logging in..." : "Log in"}
                 </Button>
-                {loginState.message && <p>{loginState.message}</p>}
+                {loginState?.message && <p>{loginState.message}</p>}
               </form>
             </TabsContent>
             <TabsContent value="signup">
@@ -111,15 +99,14 @@ export default function LoginPage() {
                 >
                   {isLoading ? "Signing up..." : "Sign up"}
                 </Button>
-                {signupState.message && <p>{signupState.message}</p>}
+                {signupState?.message && <p>{signupState.message}</p>}
               </form>
             </TabsContent>
           </Tabs>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            By continuing, you agree to our Terms of Service and
-            Privacy Policy.
+            By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </CardFooter>
       </Card>

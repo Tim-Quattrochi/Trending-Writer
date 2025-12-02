@@ -2,22 +2,14 @@ import TrendList from "@/components/TrendList";
 import { TrendItem } from "@/types/trend";
 import { ArticleDisplay } from "@/components/ArticleDisplay";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { GetAllTrendsResult } from "./dashboard.types";
 import UpdateTrendsButton from "@/components/UpdateTrendsBtn";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const baseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 async function updateTrends(): Promise<
   { newItems: TrendItem[] } | { error: string }
@@ -52,8 +44,7 @@ async function getAllTrends(
 
   if (!res.ok) {
     const errorData = await res.json();
-    const errorMessage =
-      errorData.message || "Failed to retrieve trends";
+    const errorMessage = errorData.message || "Failed to retrieve trends";
     console.error("Error fetching trends:", errorMessage); // Log the error
     return { error: errorMessage };
   }
@@ -67,7 +58,7 @@ async function getAllTrends(
     publication_date: item.publication_date,
     news_items: item.news_items,
     hash: item.hash,
-    stored_image_url: item.stored_image_url
+    stored_image_url: item.stored_image_url,
   }));
 
   return { trends, total: data.total };
@@ -97,21 +88,23 @@ export default async function Dashboard({
   }
 
   const { trends, total } = result;
-  if (trends.length === 0) {
-    await updateTrends();
-    return (
-      <div className="container mx-auto py-8">
-        <Alert>
-          <AlertTitle>No Trends Found</AlertTitle>
-          <AlertDescription>
-            There are currently no trending topics. Please check back
-            later or click the &quot;Check for new Trends&quot; button
-            to manually refresh.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+
+  console.log(trends.length);
+  // if (trends.length === 0) {
+  //   await updateTrends();
+  //   return (
+  //     <div className="container mx-auto py-8">
+  //       <Alert>
+  //         <AlertTitle>No Trends Found</AlertTitle>
+  //         <AlertDescription>
+  //           There are currently no trending topics. Please check back later or
+  //           click the &quot;Check for new Trends&quot; button to manually
+  //           refresh.
+  //         </AlertDescription>
+  //       </Alert>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -126,9 +119,7 @@ export default async function Dashboard({
         <Tabs defaultValue="trends" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="trends">Trending Topics</TabsTrigger>
-            <TabsTrigger value="articles">
-              Generated Articles
-            </TabsTrigger>
+            <TabsTrigger value="articles">Generated Articles</TabsTrigger>
           </TabsList>
 
           <TabsContent value="trends" className="space-y-6">

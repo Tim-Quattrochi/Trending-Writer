@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@/supabase/server";
 import { revalidateTag } from "next/cache";
 
@@ -36,9 +38,7 @@ export async function getAllArticles() {
   const supabase = await createClient();
 
   try {
-    const { data, error } = await supabase
-      .from("articles")
-      .select("*");
+    const { data, error } = await supabase.from("articles").select("*");
 
     if (error) {
       console.error("Error while querying for all articles:", error);
@@ -49,5 +49,45 @@ export async function getAllArticles() {
   } catch (error) {
     console.error("Unexpected error:", error);
     return { error: "Something went wrong while querying articles." };
+  }
+}
+
+import { updateTrendsFromRSS } from "@/lib/trends-service";
+
+export async function refreshTrendsAction() {
+  const supabase = await createClient();
+
+  // Check admin
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  console.log("Action Auth User:", user);
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const { data: userProfile, error: profileError } = await supabase
+    .from("users")
+    .select("is_admin, role")
+    .eq("id", user.id)
+    .single();
+
+  console.log("Action User Profile Error:", profileError);
+  console.log("Action User Profile:", userProfile);
+
+  const isAdmin = userProfile?.is_admin || userProfile?.role === "admin";
+
+  if (!isAdmin) {
+    return { error: "Admin access required" };
+  }
+
+  try {
+    const result = await updateTrendsFromRSS();
+    return { data: result };
+  } catch (error) {
+    console.error("Error refreshing trends:", error);
+    return {
+      error: error instanceof Error ? error.message : "Failed to update trends",
+    };
   }
 }

@@ -5,6 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { refreshTrendsAction } from "@/app/(dashboard)/actions";
 
 export default function UpdateTrendsButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,26 +16,21 @@ export default function UpdateTrendsButton() {
   async function handleClick() {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_VERCEL_URL}/trends`,
-        {
-          method: "POST",
-        }
-      );
+      const result = await refreshTrendsAction();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error ||
-            errorData.message ||
-            "Failed to update trends"
-        );
+      if (result.error) {
+        throw new Error(result.error);
       }
-      const data = await response.json();
+
+      const data = result.data;
 
       const getUpdateDescription = (data: any) => {
         const newCount = data.insertedTrendsCount || 0;
         const updatedCount = data.updatedTrendsCount || 0;
+
+        if (data.message && data.skipped) {
+          return data.message;
+        }
 
         if (newCount === 0 && updatedCount === 0) {
           return "No new or updated trends found.";
@@ -58,8 +54,7 @@ export default function UpdateTrendsButton() {
       toast({
         title: "Trends Updated",
         description: getUpdateDescription(data),
-        variant:
-          data.insertedTrendsCount > 0 ? "default" : "destructive",
+        variant: "default",
       });
 
       router.refresh();
@@ -67,8 +62,7 @@ export default function UpdateTrendsButton() {
       console.error("Error updating trends:", error);
       toast({
         title: "Error updating trends",
-        description:
-          error instanceof Error ? error.message : String(error),
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     } finally {
@@ -84,9 +78,7 @@ export default function UpdateTrendsButton() {
       disabled={isLoading}
       className="gap-2"
     >
-      <RefreshCw
-        className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-      />
+      <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
       {isLoading ? "Updating..." : "Check for new Trends"}
     </Button>
   );

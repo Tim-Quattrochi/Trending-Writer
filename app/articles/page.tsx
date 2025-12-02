@@ -94,11 +94,11 @@ export default async function ArticlesPage() {
           <div className="flex flex-wrap gap-3 text-sm">
             <Button asChild variant="default" className="gap-2">
               <Link
-                href="https://www.facebook.com/groups/2046217872400464"
+                href="https://www.facebook.com/profile.php?id=61584742131394"
                 target="_blank"
                 rel="noreferrer"
               >
-                Join the Facebook group
+                Like the Facebook page
               </Link>
             </Button>
             <Button asChild variant="outline" className="gap-2">

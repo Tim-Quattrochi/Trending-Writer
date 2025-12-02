@@ -17,11 +17,7 @@ export async function PATCH(
   const { title, approx_traffic, hash } = body;
 
   try {
-    const { data, error } = await editTrends(
-      Number(id),
-      title,
-      approx_traffic
-    );
+    const { data, error } = await editTrends(Number(id), title, approx_traffic);
 
     if (error) {
       return NextResponse.json({ error }, { status: 400 });
@@ -51,10 +47,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const response = await supabase
-      .from("trends")
-      .delete()
-      .eq("id", id);
+    const response = await supabase.from("trends").delete().eq("id", id);
     const statusCode = response.status;
     const error = response.error;
 
@@ -62,10 +55,7 @@ export async function DELETE(
       return NextResponse.json({ error }, { status: statusCode });
     }
 
-    return NextResponse.json(
-      { message: "Trend Deleted." },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Trend Deleted." }, { status: 200 });
   } catch (error) {
     console.error("Error deleting trend:", error);
     return NextResponse.json(
@@ -82,6 +72,17 @@ export async function GET(
   // No authentication required for GET requests
   const { id } = params;
   const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("trends")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error }, { status: 404 });
+  }
+
+  return NextResponse.json({ data });
   // ...existing code...
 }
 
@@ -89,9 +90,7 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const { isAdmin, error: authError } = await checkAdminAccess(
-    request
-  );
+  const { isAdmin, error: authError } = await checkAdminAccess(request);
   if (!isAdmin) {
     return authError;
   }

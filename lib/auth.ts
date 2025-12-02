@@ -8,6 +8,8 @@ export async function checkAdminAccess(req?: Request) {
   if (req) {
     const url = new URL(req.url);
 
+    console.log(req);
+
     // List of API endpoints that should be public (no login required)
     const publicEndpoints = [
       "/api/articles", // GET articles endpoint
@@ -41,6 +43,7 @@ export async function checkAdminAccess(req?: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  console.log("Auth User:", user);
   if (!user) {
     return {
       isAdmin: false,
@@ -51,12 +54,17 @@ export async function checkAdminAccess(req?: Request) {
 
   const { data: userProfile, error } = await supabase
     .from("users")
-    .select("is_admin")
+    .select("is_admin, role")
     .eq("id", user.id)
     .single();
 
+  console.log("User Profile Query Error:", error);
+  console.log("User Profile Data:", userProfile);
+
   // Convert snake_case from database to camelCase for application use
-  const isAdmin = userProfile?.is_admin ?? false;
+  const isAdmin = userProfile?.is_admin || userProfile?.role === "admin";
+
+  console.log("isAdmin", isAdmin);
 
   if (error || !userProfile || !isAdmin) {
     return {

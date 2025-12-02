@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@/supabase/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 export async function deleteTrend(trendId: number) {
