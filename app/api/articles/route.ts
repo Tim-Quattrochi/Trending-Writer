@@ -155,6 +155,7 @@ export async function POST(req: Request) {
       .insert([
         {
           trend_id: body.trendData.trend_id,
+          topic: body.topic,
           title: object.title,
           content: formattedContent,
           summary: object.summary,
