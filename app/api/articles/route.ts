@@ -82,7 +82,8 @@ function normalizeArticleContent(articles) {
 }
 
 export async function POST(req: Request) {
-  const { isAdmin, error: authError } = await checkAdminAccess();
+  console.log(req.headers.get("x-n8n-api-key"));
+  const { isAdmin, error: authError } = await checkAdminAccess(req);
   if (!isAdmin) {
     return authError;
   }

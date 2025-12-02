@@ -32,6 +32,7 @@ export async function checkAdminAccess(req?: Request) {
       process.env.N8N_ARTICLE_API_KEY &&
       n8nApiKey === process.env.N8N_ARTICLE_API_KEY
     ) {
+      console.log(n8nApiKey);
       return { isAdmin: true, user: null, error: null };
     }
   }
