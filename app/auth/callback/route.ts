@@ -5,8 +5,17 @@ import { createClient } from "@/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const error = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
+
   // if "next" is in param, use it as the redirect URL
-  const next = searchParams.get("next") ?? "/";
+  const next = searchParams.get("next") ?? "/dashboard";
+
+  // Handle OAuth errors (e.g., user cancelled)
+  if (error) {
+    const errorParam = encodeURIComponent(error);
+    return NextResponse.redirect(`${origin}/login?error=${errorParam}`);
+  }
 
   if (code) {
     const supabase = await createClient();
@@ -25,6 +34,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  // return the user to login page with error
+  return NextResponse.redirect(`${origin}/login?error=auth_code_error`);
 }
