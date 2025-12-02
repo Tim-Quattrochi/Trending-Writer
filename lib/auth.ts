@@ -4,7 +4,7 @@ import { createClient } from "@/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function checkAdminAccess(req?: Request) {
-  // If the request is provided, check if it's for a public API endpoint
+  // If the request is provided, check if it's for a public or trusted API endpoint
   if (req) {
     const url = new URL(req.url);
 
@@ -15,12 +15,22 @@ export async function checkAdminAccess(req?: Request) {
       "/api/categories", // GET categories endpoint
     ];
 
-    // Check if this is a GET request to a public endpoint
+    // Allow unauthenticated GET access to specific public endpoints
     if (
       req.method === "GET" &&
-      publicEndpoints.some((endpoint) =>
-        url.pathname.startsWith(endpoint)
-      )
+      publicEndpoints.some((endpoint) => url.pathname.startsWith(endpoint))
+    ) {
+      return { isAdmin: true, user: null, error: null };
+    }
+
+    // Allow trusted automation (e.g. n8n) to call POST /api/articles
+    const n8nApiKey = req.headers.get("x-n8n-api-key");
+    if (
+      req.method === "POST" &&
+      url.pathname.startsWith("/api/articles") &&
+      n8nApiKey &&
+      process.env.N8N_ARTICLE_API_KEY &&
+      n8nApiKey === process.env.N8N_ARTICLE_API_KEY
     ) {
       return { isAdmin: true, user: null, error: null };
     }
@@ -35,10 +45,7 @@ export async function checkAdminAccess(req?: Request) {
     return {
       isAdmin: false,
       user: null,
-      error: NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      ),
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     };
   }
 
