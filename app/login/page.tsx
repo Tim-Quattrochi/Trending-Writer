@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useState, useActionState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Compass,
   Mail,
@@ -72,7 +73,32 @@ function SubmitButton({ mode, pending }: { mode: AuthMode; pending: boolean }) {
   );
 }
 
-export default function LoginPage() {
+function LoginFormSkeleton() {
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 lg:py-12">
+      <div className="w-full max-w-md space-y-6">
+        <div className="flex justify-center">
+          <Skeleton className="h-14 w-48 rounded-2xl" />
+        </div>
+        <Card className="border-border/60 shadow-lg">
+          <CardHeader className="space-y-1 pb-4 text-center">
+            <Skeleton className="mx-auto h-8 w-40" />
+            <Skeleton className="mx-auto h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-11 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function LoginFormContent() {
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -337,5 +363,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormSkeleton />}>
+      <LoginFormContent />
+    </Suspense>
   );
 }
