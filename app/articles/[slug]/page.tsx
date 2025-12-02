@@ -54,7 +54,6 @@ async function getArticle(slug: string): Promise<Article | null> {
     }
 
     const article: Article = data.items[0];
-    console.log(article);
 
     return article;
   } catch (error) {
@@ -70,11 +69,7 @@ function getReadingTime(content: string) {
   return readingTime;
 }
 
-export default async function Page({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function Page({ params }: { params: { slug: string } }) {
   //https://nextjs.org/docs/messages/sync-dynamic-apis
   const { slug } = await params;
   const article = await getArticle(slug);
@@ -87,8 +82,7 @@ export default async function Page({
 
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
     `${
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      "https://trending-writer.vercel.app"
+      process.env.NEXT_PUBLIC_SITE_URL || "https://trending-writer.vercel.app"
     }/articles/${slug}`
   )}`;
 
@@ -113,14 +107,11 @@ export default async function Page({
               <CalendarIcon className="h-4 w-4 mr-2" />
               <time dateTime={article.created_at}>
                 {article.created_at &&
-                  new Date(article.created_at).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }
-                  )}
+                  new Date(article.created_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
               </time>
             </div>
 
@@ -159,26 +150,25 @@ export default async function Page({
 
           <Separator className="my-8" />
           <div className="flex flex-col gap-6">
-            {article.meta_keywords &&
-              article.meta_keywords.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2 flex items-center">
-                    <Tag className="h-4 w-4 mr-2" />
-                    Topics
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {article.meta_keywords.map((keyword, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="px-3 py-1"
-                      >
-                        {keyword}
-                      </Badge>
-                    ))}
-                  </div>
+            {article.meta_keywords && article.meta_keywords.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2 flex items-center">
+                  <Tag className="h-4 w-4 mr-2" />
+                  Topics
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {article.meta_keywords.map((keyword, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="px-3 py-1"
+                    >
+                      {keyword}
+                    </Badge>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
             <div className="mx-auto flex max-w-2xl items-center justify-between">
               {/* <div className="flex items-center gap-2">

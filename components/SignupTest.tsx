@@ -30,8 +30,6 @@ export default function SignupTest() {
         password,
       });
 
-      console.log("Signup response:", { data, error });
-
       if (error) {
         throw error;
       }
@@ -39,8 +37,7 @@ export default function SignupTest() {
       if (data.user) {
         setStatus({
           success: true,
-          message:
-            "Signup successful! Check your email for confirmation link.",
+          message: "Signup successful! Check your email for confirmation link.",
         });
       }
     } catch (error) {
@@ -48,9 +45,7 @@ export default function SignupTest() {
       setStatus({
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "An unknown error occurred",
+          error instanceof Error ? error.message : "An unknown error occurred",
       });
     } finally {
       setIsLoading(false);
@@ -73,9 +68,7 @@ export default function SignupTest() {
             ) : (
               <AlertCircle className="h-4 w-4" />
             )}
-            <AlertTitle>
-              {status.success ? "Success" : "Error"}
-            </AlertTitle>
+            <AlertTitle>{status.success ? "Success" : "Error"}</AlertTitle>
             <AlertDescription>{status.message}</AlertDescription>
           </Alert>
         )}
@@ -107,11 +100,7 @@ export default function SignupTest() {
             </p>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Signing up..." : "Test Signup"}
           </Button>
         </form>

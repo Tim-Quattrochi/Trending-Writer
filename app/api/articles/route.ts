@@ -82,7 +82,6 @@ function normalizeArticleContent(articles) {
 }
 
 export async function POST(req: Request) {
-  console.log(req.headers.get("x-n8n-api-key"));
   const { isAdmin, error: authError } = await checkAdminAccess(req);
   if (!isAdmin) {
     return authError;
@@ -128,13 +127,10 @@ export async function POST(req: Request) {
   Maintain a professional, engaging tone that appeals to social media scrollers and social media users who love reading juicy articles. Use the provided news items as a foundation, but expand on the topic with additional insights as needed.`;
 
     const { object } = await generateObject({
-      model: google("gemini-1.5-pro"),
+      model: google("gemini-2.5-pro"),
       schema: articleSchema,
       prompt,
-
       temperature: 0.4,
-      frequencyPenalty: 0.5,
-      presencePenalty: 0.5,
       system:
         "You are an expert in SEO and writing articles that generate organic traffic. Write an article that will rank well on Google and attract readers interested in trending news. Ensure the meta description is under 160 characters.",
       maxRetries: 3,

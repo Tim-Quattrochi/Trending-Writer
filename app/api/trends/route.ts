@@ -102,13 +102,8 @@ async function parseRSS(xmlContent: string): Promise<ParsedItem[]> {
       Array.isArray(item["ht:news_item"])
     ) {
       // Look for image URL patterns in the first few news items
-      for (
-        let i = 0;
-        i < Math.min(3, item["ht:news_item"].length);
-        i++
-      ) {
-        const newsItemContent =
-          item["ht:news_item"][i]["ht:news_item_url"];
+      for (let i = 0; i < Math.min(3, item["ht:news_item"].length); i++) {
+        const newsItemContent = item["ht:news_item"][i]["ht:news_item_url"];
         if (
           newsItemContent &&
           newsItemContent.match(/\.(jpg|jpeg|png|gif|webp)/i)
@@ -163,24 +158,20 @@ export async function POST(req: Request) {
 
   const supabase = await createClient();
 
-  const { data: lastUpdated, error: lastUpdatedError } =
-    await supabase.from("trend_updates").select("last_checked_at");
+  const { data: lastUpdated, error: lastUpdatedError } = await supabase
+    .from("trend_updates")
+    .select("last_checked_at");
 
   if (lastUpdatedError) {
-    console.error(
-      "Error fetching last updated time:",
-      lastUpdatedError
-    );
+    console.error("Error fetching last updated time:", lastUpdatedError);
     return NextResponse.json(
       { error: "Error fetching last updated time" },
       {
         status: 500,
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },
       }
     );
@@ -200,18 +191,17 @@ export async function POST(req: Request) {
 
     try {
       const rssContent = await fetchRSS(rssUrl);
-      console.log("rssContent", rssContent);
+
       const newItems = await parseRSS(rssContent);
 
       const newTrends = [];
 
       for (const item of newItems) {
-        const { data: existingTrend, error: hashError } =
-          await supabase
-            .from("trends")
-            .select("hash")
-            .eq("hash", item.Hash)
-            .single();
+        const { data: existingTrend, error: hashError } = await supabase
+          .from("trends")
+          .select("hash")
+          .eq("hash", item.Hash)
+          .single();
 
         if (hashError && hashError.code !== "PGRST116") {
           // "PGRST116" means no data found
@@ -220,24 +210,19 @@ export async function POST(req: Request) {
         }
 
         if (!existingTrend) {
-          const { error: insertError } = await supabase
-            .from("trends")
-            .insert([
-              {
-                title: item.Title,
-                approx_traffic: item["Approx Traffic"],
-                publication_date: item["Publication Date"],
-                news_items: item["News Items"],
-                hash: item.Hash,
-                stored_image_url: item.Picture,
-              },
-            ]);
+          const { error: insertError } = await supabase.from("trends").insert([
+            {
+              title: item.Title,
+              approx_traffic: item["Approx Traffic"],
+              publication_date: item["Publication Date"],
+              news_items: item["News Items"],
+              hash: item.Hash,
+              stored_image_url: item.Picture,
+            },
+          ]);
 
           if (insertError) {
-            console.error(
-              "Error inserting new trend:",
-              insertError.message
-            );
+            console.error("Error inserting new trend:", insertError.message);
             throw new Error("Error inserting new trend");
           }
 
@@ -255,10 +240,7 @@ export async function POST(req: Request) {
             })
             .eq("hash", item.Hash);
           if (updateError) {
-            console.error(
-              "Error updating existing trend:",
-              updateError
-            );
+            console.error("Error updating existing trend:", updateError);
             throw new Error("Error updating existing trend");
           }
           updatedTrendsCount++;
@@ -277,10 +259,8 @@ export async function POST(req: Request) {
           status: 200,
           headers: {
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods":
-              "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers":
-              "Content-Type, Authorization",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
         }
       );
@@ -294,10 +274,8 @@ export async function POST(req: Request) {
           status: 500,
           headers: {
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods":
-              "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers":
-              "Content-Type, Authorization",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
         }
       );
@@ -341,10 +319,8 @@ export async function GET(req: Request): Promise<NextResponse> {
         status: 200,
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },
       }
     );
@@ -358,10 +334,8 @@ export async function GET(req: Request): Promise<NextResponse> {
         status: 500,
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers":
-            "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },
       }
     );
