@@ -7,6 +7,12 @@ import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { generateSlug } from "@/lib/utils";
 import { checkAdminAccess } from "@/lib/auth";
+import {
+  ARTICLE_WITH_CATEGORIES,
+  DEFAULT_CATEGORY_SLUG,
+  mapArticles,
+} from "@/lib/article-helpers";
+import { Article } from "@/app/api/articles/article.types";
 
 const articleSchema = z.object({
   title: z
@@ -68,7 +74,7 @@ const articleSchema = z.object({
 });
 
 // Function to normalize article content format for consistent rendering
-function normalizeArticleContent(articles) {
+function normalizeArticleContent(articles: Article[]): Article[] {
   return articles.map((article) => {
     // Return articles with consistently formatted content
     return {
@@ -181,6 +187,10 @@ export async function POST(req: Request) {
     revalidateTag("articles");
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const fallbackCategorySlug =
+      typeof body.categorySlug === "string"
+        ? body.categorySlug
+        : DEFAULT_CATEGORY_SLUG;
 
     return Response.json({
       message: "Article generated",
@@ -189,7 +199,7 @@ export async function POST(req: Request) {
         slug: newArticle.slug,
         url:
           baseUrl && newArticle.slug
-            ? `${baseUrl}/articles/${newArticle.slug}`
+            ? `${baseUrl}/trends/${fallbackCategorySlug}/${newArticle.slug}`
             : null,
       },
       object,
@@ -225,7 +235,9 @@ export async function GET(req: Request) {
   };
 
   try {
-    let query = supabase.from("articles").select("*");
+    let query = supabase
+      .from("articles")
+      .select(ARTICLE_WITH_CATEGORIES);
 
     if (slug) {
       query = query.eq("slug", slug);
@@ -249,9 +261,9 @@ export async function GET(req: Request) {
       );
     }
 
-    const normalizedArticles = articles
-      ? normalizeArticleContent(articles)
-      : [];
+    const normalizedArticles = normalizeArticleContent(
+      mapArticles(articles)
+    );
 
     revalidateTag("articles");
     return NextResponse.json({ items: normalizedArticles });

@@ -5,6 +5,7 @@ import { Article } from "@/app/api/articles/article.types";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
+import { getArticlePath } from "@/lib/article-helpers";
 
 type ArticleCardVariant = "featured" | "grid" | "list";
 
@@ -54,7 +55,7 @@ export default function ArticleCard({
     "Freshly generated from the Daily Oddities feed.";
 
   const gradient = fallbackGradients[article.id % fallbackGradients.length];
-  const href = `/articles/${article.slug ?? article.id}`;
+  const href = getArticlePath(article);
 
   return (
     <Link

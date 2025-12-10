@@ -1,17 +1,34 @@
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Article {
   id: number;
   title: string;
   content: string;
-  trend_id?: number;
-  created_at?: string;
-  updated_at?: string;
-  published_at?: string;
+  trend_id?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  published_at?: string | null;
   summary: string;
-  image_url?: string;
-  meta_description?: string;
-  meta_keywords?: string[];
-  is_published?: boolean;
-  slug?: string;
+  image_url?: string | null;
+  meta_description?: string | null;
+  meta_keywords?: string[] | string | null;
+  is_published?: boolean | null;
+  slug?: string | null;
+  topic?: string | null;
+  source_url?: string | null;
+  likes?: number | null;
+  comments?: number | null;
+  categories?: Category[];
+  primaryCategorySlug?: string;
+  primaryCategoryName?: string | null;
 }
 
 interface ArticleResponseSuccess {

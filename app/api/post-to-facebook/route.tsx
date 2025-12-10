@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/supabase/server";
 import { Article } from "@/app/api/articles/article.types";
 import { checkAdminAccess } from "@/lib/auth";
+import { DEFAULT_CATEGORY_SLUG, getArticlePath } from "@/lib/article-helpers";
 
 export async function POST(req: Request): Promise<NextResponse> {
   const { isAdmin, error: authError } = await checkAdminAccess();
@@ -36,7 +37,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    const message = buildFacebookMessage(article);
+    const articleUrl = buildArticleUrl(article);
+    const message = buildFacebookMessage(article, articleUrl);
 
     const response = await fetch(
       `https://graph.facebook.com/v17.0/${FB_PAGE_ID}/feed`,
@@ -49,9 +51,7 @@ export async function POST(req: Request): Promise<NextResponse> {
           message,
           access_token: FB_ACCESS_TOKEN,
 
-          link: process.env.NEXT_PUBLIC_SITE_URL
-            ? `${process.env.NEXT_PUBLIC_SITE_URL}/articles/${article.slug}`
-            : undefined,
+          link: articleUrl,
         }),
       }
     );
@@ -84,18 +84,28 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 }
 
-function buildFacebookMessage(article: Article): string {
+function buildFacebookMessage(article: Article, articleUrl?: string): string {
   return `${article.title}
 
 ${article.summary}
 
-Read the full article: ${process.env.NEXT_PUBLIC_SITE_URL}/articles/${
-    article.slug
-  }
+Read the full article: ${articleUrl ?? ""}
 
 #TrendingNews #${article.meta_keywords?.[0] || "News"} #${
     article.meta_keywords?.[1] || "TrendingWriter"
   }`;
+}
+
+function buildArticleUrl(article: Article): string | undefined {
+  if (!process.env.NEXT_PUBLIC_SITE_URL) {
+    return undefined;
+  }
+
+  const path = getArticlePath(article, {
+    fallbackCategorySlug: DEFAULT_CATEGORY_SLUG,
+  });
+
+  return `${process.env.NEXT_PUBLIC_SITE_URL}${path}`;
 }
 
 async function logFacebookPost(

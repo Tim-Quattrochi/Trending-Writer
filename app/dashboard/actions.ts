@@ -2,6 +2,7 @@
 
 import { createClient } from "@/supabase/server";
 import { revalidateTag } from "next/cache";
+import { ARTICLE_WITH_CATEGORIES, mapArticles } from "@/lib/article-helpers";
 
 export async function editTrends(
   trendId: number,
@@ -38,14 +39,16 @@ export async function getAllArticles() {
   const supabase = await createClient();
 
   try {
-    const { data, error } = await supabase.from("articles").select("*");
+    const { data, error } = await supabase
+      .from("articles")
+      .select(ARTICLE_WITH_CATEGORIES);
 
     if (error) {
       console.error("Error while querying for all articles:", error);
       return { error: "Error while querying for all articles." };
     }
 
-    return { data };
+    return { data: mapArticles(data) };
   } catch (error) {
     console.error("Unexpected error:", error);
     return { error: "Something went wrong while querying articles." };

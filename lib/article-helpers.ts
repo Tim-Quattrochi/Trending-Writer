@@ -1,0 +1,78 @@
+import { Article, Category } from "@/app/api/articles/article.types";
+import { Database } from "@/types/types_db";
+
+export const DEFAULT_CATEGORY_SLUG = "oddities";
+export const DEFAULT_CATEGORY_NAME = "Oddities";
+
+export const ARTICLE_WITH_CATEGORIES = `
+  *,
+  article_categories:article_categories (
+    categories:categories (*)
+  )
+`;
+
+export type ArticleQueryResult =
+  Database["public"]["Tables"]["articles"]["Row"] & {
+    article_categories?: Array<{
+      categories?: Database["public"]["Tables"]["categories"]["Row"] | null;
+    }>;
+  };
+
+function mapCategory(row: Database["public"]["Tables"]["categories"]["Row"]): Category {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    is_active: row.is_active,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+export function mapArticle(record: ArticleQueryResult): Article {
+  const categories =
+    record.article_categories
+      ?.map((relation) => relation.categories)
+      .filter((category): category is NonNullable<typeof category> => Boolean(category))
+      .map(mapCategory) ?? [];
+
+  const primaryCategory = categories[0];
+
+  return {
+    ...record,
+    title: record.title ?? "Untitled Dispatch",
+    summary: record.summary ?? "",
+    categories,
+    primaryCategorySlug: primaryCategory?.slug ?? DEFAULT_CATEGORY_SLUG,
+    primaryCategoryName: primaryCategory?.name ?? DEFAULT_CATEGORY_NAME,
+  };
+}
+
+export function mapArticles(records?: ArticleQueryResult[] | null): Article[] {
+  if (!records) {
+    return [];
+  }
+
+  return records.map(mapArticle);
+}
+
+interface ArticlePathOptions {
+  fallbackCategorySlug?: string;
+}
+
+export function getArticlePath(
+  article: Pick<Article, "slug" | "primaryCategorySlug">,
+  options: ArticlePathOptions = {}
+): string {
+  if (!article.slug) {
+    return "/articles";
+  }
+
+  const categorySlug =
+    article.primaryCategorySlug ||
+    options.fallbackCategorySlug ||
+    DEFAULT_CATEGORY_SLUG;
+
+  return `/trends/${categorySlug}/${article.slug}`;
+}

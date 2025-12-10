@@ -12,27 +12,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/supabase/server";
-
-interface Article {
-  id: number;
-  title: string | null;
-  content: string;
-  summary?: string | null;
-  meta_description?: string | null;
-  meta_keywords?: string[] | string | null;
-  image_url?: string | null;
-  slug?: string | null;
-  created_at?: string;
-}
+import { Article } from "@/app/api/articles/article.types";
+import {
+  ARTICLE_WITH_CATEGORIES,
+  getArticlePath,
+  mapArticles,
+} from "@/lib/article-helpers";
 
 async function getPreviewArticles(): Promise<Article[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("articles")
-    .select(
-      "id, title, content, summary, meta_description, meta_keywords, image_url, slug, created_at"
-    )
+    .select(ARTICLE_WITH_CATEGORIES)
     .eq("is_published", true)
     .order("created_at", { ascending: false })
     .limit(6);
@@ -42,7 +34,7 @@ async function getPreviewArticles(): Promise<Article[]> {
     return [];
   }
 
-  return data || [];
+  return mapArticles(data);
 }
 
 function getReadingTime(content?: string) {
@@ -168,9 +160,7 @@ export default async function LandingPage() {
                   </div>
                 </div>
                 <Link
-                  href={`/articles/${
-                    featuredArticle.slug || featuredArticle.id
-                  }`}
+                  href={getArticlePath(featuredArticle)}
                   className="absolute inset-0"
                   aria-label={`Read ${featuredArticle.title}`}
                 />
@@ -267,7 +257,7 @@ export default async function LandingPage() {
                         </div>
                       </div>
                       <Link
-                        href={`/articles/${article.slug || article.id}`}
+                        href={getArticlePath(article)}
                         className="absolute inset-0"
                         aria-label={`Read ${article.title}`}
                       />

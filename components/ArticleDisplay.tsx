@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Edit } from "lucide-react";
 import { Article } from "@/app/api/articles/article.types";
+import { getArticlePath } from "@/lib/article-helpers";
 
 export const ARTICLE_GENERATED_EVENT = "article-generated";
 
@@ -348,7 +349,7 @@ export function ArticleDisplay() {
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        router.push(`/articles/${selectedArticle.slug}`)
+                        router.push(getArticlePath(selectedArticle))
                       }
                       className="gap-1"
                     >
