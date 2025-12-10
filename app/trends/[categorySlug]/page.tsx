@@ -161,7 +161,7 @@ export default async function CategoryPage({
               <div className="rounded-2xl border border-dashed bg-background/60 px-4 py-4 text-xs">
                 <p className="font-semibold text-foreground">Share link</p>
                 <p className="break-all text-muted-foreground">
-                  {`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://trending-writer.vercel.app"}/trends/${category.slug}`}
+                  {`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://trendingwriters.com"}/trends/${category.slug}`}
                 </p>
               </div>
             </div>

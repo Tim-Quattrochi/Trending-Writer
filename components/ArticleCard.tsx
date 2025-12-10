@@ -1,11 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { Calendar, Clock, Sparkles } from "lucide-react";
 import { Article } from "@/app/api/articles/article.types";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
-import { getArticlePath } from "@/lib/article-helpers";
+import {
+  DEFAULT_CATEGORY_NAME,
+  DEFAULT_CATEGORY_SLUG,
+  getArticlePath,
+} from "@/lib/article-helpers";
 
 type ArticleCardVariant = "featured" | "grid" | "list";
 
@@ -41,6 +49,7 @@ export default function ArticleCard({
   article,
   variant = "grid",
 }: ArticleCardProps) {
+  const router = useRouter();
   const readingTime = getReadingTime(article.content);
   const keywords = normalizeKeywords(article.meta_keywords);
   const truncatedContent = article.content
@@ -56,6 +65,15 @@ export default function ArticleCard({
 
   const gradient = fallbackGradients[article.id % fallbackGradients.length];
   const href = getArticlePath(article);
+  const categorySlug = article.primaryCategorySlug ?? DEFAULT_CATEGORY_SLUG;
+  const categoryName = article.primaryCategoryName ?? DEFAULT_CATEGORY_NAME;
+  const categoryHref = `/trends/${categorySlug}`;
+
+  const handleCategoryNavigation = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    router.push(categoryHref);
+  };
 
   return (
     <Link
@@ -117,7 +135,22 @@ export default function ArticleCard({
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="eyebrow text-primary/70">Daily Oddities Dispatch</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCategoryNavigation}
+                className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
+                aria-label={`Browse ${categoryName} dispatches`}
+              >
+                <Badge
+                  variant="outline"
+                  className="rounded-full border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-primary"
+                >
+                  {categoryName}
+                </Badge>
+              </button>
+              <p className="eyebrow text-primary/70">Daily Oddities Dispatch</p>
+            </div>
             <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               {article.title}
             </h3>

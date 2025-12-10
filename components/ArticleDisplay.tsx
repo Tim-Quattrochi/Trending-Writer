@@ -19,7 +19,11 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Edit } from "lucide-react";
 import { Article } from "@/app/api/articles/article.types";
-import { getArticlePath } from "@/lib/article-helpers";
+import {
+  DEFAULT_CATEGORY_NAME,
+  DEFAULT_CATEGORY_SLUG,
+  getArticlePath,
+} from "@/lib/article-helpers";
 
 export const ARTICLE_GENERATED_EVENT = "article-generated";
 
@@ -169,7 +173,13 @@ export function ArticleDisplay() {
 
       toast({
         title: "Posted to Facebook",
-        description: "Your article has been successfully posted to Facebook.",
+        description: (() => {
+          const siteOrigin =
+            process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+            window.location.origin;
+          const canonicalUrl = `${siteOrigin}${getArticlePath(article)}`;
+          return `Shared directly from ${canonicalUrl}`;
+        })(),
       });
     } catch (error) {
       console.error("Error posting to Facebook:", error);
@@ -255,10 +265,35 @@ export function ArticleDisplay() {
         {/* Main article preview */}
         <div className="lg:col-span-2">
           {selectedArticle && (
+            (() => {
+              const selectedCategorySlug =
+                selectedArticle.primaryCategorySlug ?? DEFAULT_CATEGORY_SLUG;
+              const selectedCategoryName =
+                selectedArticle.primaryCategoryName ?? DEFAULT_CATEGORY_NAME;
+              const selectedCategoryHref = `/trends/${selectedCategorySlug}`;
+              const canonicalArticlePath = getArticlePath(selectedArticle);
+
+              return (
             <Card className="h-full border-border/60 bg-card/60 shadow-sm">
               <CardHeader className="space-y-4 border-b bg-gradient-to-r from-background via-background to-muted/40 pb-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={selectedCategoryHref}
+                        className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
+                      >
+                        <Badge
+                          variant="outline"
+                          className="rounded-full border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-primary"
+                        >
+                          {selectedCategoryName}
+                        </Badge>
+                      </Link>
+                      <span className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+                        Primary hub
+                      </span>
+                    </div>
                     <CardTitle className="text-2xl font-semibold leading-tight">
                       {selectedArticle.title}
                     </CardTitle>
@@ -348,12 +383,18 @@ export function ArticleDisplay() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        router.push(getArticlePath(selectedArticle))
-                      }
+                      onClick={() => router.push(canonicalArticlePath)}
                       className="gap-1"
                     >
                       Read full article
+                    </Button>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <Link href={selectedCategoryHref}>Category hub</Link>
                     </Button>
                     {selectedArticle && (
                       <Button
@@ -370,6 +411,8 @@ export function ArticleDisplay() {
                 </div>
               </CardContent>
             </Card>
+              );
+            })()
           )}
         </div>
       </div>

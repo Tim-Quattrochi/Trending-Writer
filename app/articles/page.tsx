@@ -5,6 +5,10 @@ import { getAllArticles } from "@/app/dashboard/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import {
+  DEFAULT_CATEGORY_NAME,
+  DEFAULT_CATEGORY_SLUG,
+} from "@/lib/article-helpers";
 
 export const metadata: Metadata = {
   title: "Daily Oddities Dispatch | Articles",
@@ -27,6 +31,30 @@ export default async function ArticlesPage() {
   }
 
   const { data } = response;
+
+  const categoryHighlights = [
+    {
+      slug: "ai-breakthroughs",
+      title: "AI Breakthroughs",
+      blurb:
+        "Deep dives on the models and policies shaping this week's hype cycle.",
+      accent: "from-[#a855f7] to-[#6366f1]",
+    },
+    {
+      slug: "industry-moves",
+      title: "Industry Moves",
+      blurb:
+        "Fundraises, pivots, and boardroom intrigue—packaged for your morning brief.",
+      accent: "from-[#34d399] to-[#10b981]",
+    },
+    {
+      slug: DEFAULT_CATEGORY_SLUG ?? "macro",
+      title: DEFAULT_CATEGORY_NAME ?? "Macro Signals",
+      blurb:
+        "Economic swings, regulation chatter, and energy shocks in one scroll.",
+      accent: "from-[#f59e0b] to-[#ef4444]",
+    },
+  ];
 
   if (!data || data.length === 0) {
     return (
@@ -101,8 +129,13 @@ export default async function ArticlesPage() {
                 Like the Facebook page
               </Link>
             </Button>
-            <Button asChild variant="outline" className="gap-2">
-              <Link href="/">Back home</Link>
+            <Button asChild variant="secondary" className="gap-2">
+              <Link
+                href={`/trends/${DEFAULT_CATEGORY_SLUG ?? "macro"}`}
+                prefetch
+              >
+                Browse category hubs
+              </Link>
             </Button>
           </div>
         </div>
@@ -140,7 +173,60 @@ export default async function ArticlesPage() {
         </div>
       </section>
 
-      <ArticleList articles={data} />
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow text-muted-foreground">Category hubs</p>
+            <h2 className="text-2xl font-semibold">
+              Follow the threads bubbling on Google Trends
+            </h2>
+            <p className="text-muted-foreground">
+              Choose a lane and we&apos;ll keep the dispatches flowing with fresh
+              angles and canonical URLs you can share.
+            </p>
+          </div>
+          <Button asChild variant="ghost">
+            <Link href="/trends" prefetch>
+              View all hubs
+            </Link>
+          </Button>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {categoryHighlights.map((highlight) => (
+            <Link
+              key={highlight.slug}
+              href={`/trends/${highlight.slug}`}
+              className="group relative overflow-hidden rounded-3xl border"
+              prefetch
+            >
+              <div
+                className={`relative h-full space-y-3 bg-gradient-to-br ${highlight.accent} p-6 text-white`}
+              >
+                <div className="text-sm uppercase tracking-[0.35em] text-white/80">
+                  Spotlight
+                </div>
+                <h3 className="text-2xl font-semibold">{highlight.title}</h3>
+                <p className="text-white/80">{highlight.blurb}</p>
+                <span className="inline-flex items-center gap-2 text-sm">
+                  Dive in
+                  <span className="transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <ArticleList
+        articles={data}
+        eyebrow="Fresh dispatches"
+        heading="All articles, filtered by what you care about"
+        subcopy="Use the category filters to jump into AI, energy, macro, or indie creator storylines and copy the canonical link straight into your decks."
+        showCategoryFilters
+        defaultCategorySlug={DEFAULT_CATEGORY_SLUG ?? "macro"}
+      />
     </div>
   );
 }
