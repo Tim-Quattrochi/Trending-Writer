@@ -3,6 +3,8 @@
 import { createClient } from "@/supabase/server";
 import { revalidateTag } from "next/cache";
 import { ARTICLE_WITH_CATEGORIES, mapArticles } from "@/lib/article-helpers";
+import { Article } from "@/app/api/articles/article.types";
+import { Database } from "@/types/types_db";
 
 export async function editTrends(
   trendId: number,
@@ -52,6 +54,78 @@ export async function getAllArticles() {
   } catch (error) {
     console.error("Unexpected error:", error);
     return { error: "Something went wrong while querying articles." };
+  }
+}
+
+type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
+
+type CategoryArticlesResponse =
+  | { category: CategoryRow; data: Article[]; error?: undefined }
+  | { error: string; category?: undefined; data?: undefined };
+
+export async function getCategoryArticles(
+  categorySlug: string
+): Promise<CategoryArticlesResponse> {
+  const supabase = await createClient();
+  const normalizedSlug = categorySlug?.toLowerCase().trim();
+
+  if (!normalizedSlug) {
+    return { error: "Category slug is required" };
+  }
+
+  try {
+    const { data: category, error: categoryError } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("slug", normalizedSlug)
+      .maybeSingle();
+
+    if (categoryError) {
+      console.error("Error fetching category:", categoryError);
+      return { error: "Error fetching category" };
+    }
+
+    if (!category) {
+      return { error: "Category not found" };
+    }
+
+    const { data: relations, error: relationsError } = await supabase
+      .from("article_categories")
+      .select("article_id")
+      .eq("category_id", category.id);
+
+    if (relationsError) {
+      console.error("Error fetching article relations:", relationsError);
+      return { error: "Error fetching category articles" };
+    }
+
+    const articleIds = Array.from(
+      new Set(
+        (relations ?? [])
+          .map((relation) => relation.article_id)
+          .filter((id): id is number => typeof id === "number")
+      )
+    );
+
+    if (articleIds.length === 0) {
+      return { category, data: [] };
+    }
+
+    const { data: articles, error: articlesError } = await supabase
+      .from("articles")
+      .select(ARTICLE_WITH_CATEGORIES)
+      .in("id", articleIds)
+      .order("created_at", { ascending: false });
+
+    if (articlesError) {
+      console.error("Error fetching articles by category:", articlesError);
+      return { error: "Error fetching articles" };
+    }
+
+    return { category, data: mapArticles(articles) };
+  } catch (error) {
+    console.error("Unexpected error while fetching category articles:", error);
+    return { error: "Unexpected error fetching category articles" };
   }
 }
 
