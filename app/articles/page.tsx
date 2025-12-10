@@ -11,9 +11,9 @@ import {
 } from "@/lib/article-helpers";
 
 export const metadata: Metadata = {
-  title: "Daily Oddities Dispatch | Articles",
+  title: "Daily Oddities Brief | Articles",
   description:
-    "A modern editorial hub for quirky observations sourced from Google Trends and the Daily Oddities community.",
+    "A modern editorial hub for quirky observations sourced from curious corners of the internet and the Daily Oddities community.",
 };
 
 export default async function ArticlesPage() {
@@ -61,7 +61,7 @@ export default async function ArticlesPage() {
       <div className="container mx-auto py-16 px-4 md:px-6">
         <div className="rounded-3xl border border-dashed bg-muted/40 p-10 text-center">
           <Ghost className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-          <h1 className="text-3xl font-semibold">No dispatches yet</h1>
+          <h1 className="text-3xl font-semibold">No articles yet</h1>
           <p className="mb-6 text-muted-foreground">
             Fresh stories are on the way. Check back soon for quirky takes on
             trending topics.
@@ -97,12 +97,13 @@ export default async function ArticlesPage() {
           </p>
           <div className="space-y-4">
             <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-              The Dispatch — Strange signals from today&apos;s internet
+              Daily Brief — Strange signals from today&apos;s internet
             </h1>
             <p className="max-w-2xl text-lg text-muted-foreground">
-              Stories born from Google Trends rabbit holes, remixed with Daily
-              Oddities humour. Expect delightful oddities, cultural blips, and
-              curious human behavior wrapped in an accessible editorial layout.
+              Stories sparked by emerging conversations across the web, remixed
+              with Daily Oddities humour. Expect delightful oddities, cultural
+              blips, and curious human behavior wrapped in an accessible
+              editorial layout.
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
@@ -166,8 +167,8 @@ export default async function ArticlesPage() {
               </li>
             </ul>
             <p className="text-sm text-white/70">
-              Posts regenerate hourly via Google Trends RSS. Tap into the stream
-              anytime.
+              Stories refresh hourly as new cultural sparks bubble up across the
+              internet. Tap into the stream anytime.
             </p>
           </div>
         </div>
@@ -178,11 +179,11 @@ export default async function ArticlesPage() {
           <div>
             <p className="eyebrow text-muted-foreground">Category hubs</p>
             <h2 className="text-2xl font-semibold">
-              Follow the threads bubbling on Google Trends
+              Follow the threads bubbling across the internet
             </h2>
             <p className="text-muted-foreground">
-              Choose a lane and we&apos;ll keep the dispatches flowing with fresh
-              angles and canonical URLs you can share.
+              Pick a topic and we&apos;ll keep the stories flowing with fresh
+              angles and share-ready links.
             </p>
           </div>
           <Button asChild variant="ghost">
@@ -221,9 +222,9 @@ export default async function ArticlesPage() {
 
       <ArticleList
         articles={data}
-        eyebrow="Fresh dispatches"
+        eyebrow="Fresh articles"
         heading="All articles, filtered by what you care about"
-        subcopy="Use the category filters to jump into AI, energy, macro, or indie creator storylines and copy the canonical link straight into your decks."
+        subcopy="Use the category filters to jump into AI, energy, macro, or indie creator storylines and grab a share-ready link when something resonates."
         showCategoryFilters
         defaultCategorySlug={DEFAULT_CATEGORY_SLUG ?? "macro"}
       />
