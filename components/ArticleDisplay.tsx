@@ -178,7 +178,7 @@ export function ArticleDisplay() {
             process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
             window.location.origin;
           const canonicalUrl = `${siteOrigin}${getArticlePath(article)}`;
-          return `Shared directly from ${canonicalUrl}`;
+          return `Shared to Facebook via ${canonicalUrl}`;
         })(),
       });
     } catch (error) {

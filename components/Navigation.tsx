@@ -89,7 +89,7 @@ export default function Navigation() {
   const navItems = [
     {
       href: "/articles",
-      label: "Dispatches",
+      label: "Articles",
       description: "Daily Oddities blog",
       icon: Newspaper,
       active: pathname === "/articles" || pathname.startsWith("/articles"),

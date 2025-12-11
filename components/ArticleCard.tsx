@@ -140,7 +140,7 @@ export default function ArticleCard({
                 type="button"
                 onClick={handleCategoryNavigation}
                 className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-                aria-label={`Browse ${categoryName} dispatches`}
+                aria-label={`Browse ${categoryName} stories`}
               >
                 <Badge
                   variant="outline"
@@ -149,7 +149,7 @@ export default function ArticleCard({
                   {categoryName}
                 </Badge>
               </button>
-              <p className="eyebrow text-primary/70">Daily Oddities Dispatch</p>
+              <p className="eyebrow text-primary/70">Daily Oddities</p>
             </div>
             <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               {article.title}

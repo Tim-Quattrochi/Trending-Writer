@@ -75,9 +75,9 @@ function getArticleCategoryMeta(article: Article) {
 
 export default function ArticleList({
   articles,
-  eyebrow = "Fresh dispatches",
+  eyebrow = "Fresh articles",
   heading = "Latest from Daily Oddities",
-  subcopy = "Curated oddities sourced from Google Trends RSS and shaped into playful essays for the Daily Oddities community.",
+  subcopy = "Curated oddities sourced from curious corners of the internet and shaped into playful essays for the Daily Oddities community.",
   showCategoryFilters = false,
   defaultCategorySlug,
 }: ArticleListProps) {
@@ -259,7 +259,7 @@ export default function ArticleList({
               variant={activeCategory === "all" ? "default" : "ghost"}
               onClick={() => setActiveCategory("all")}
             >
-              All dispatches
+              All articles
             </Button>
             {categoryOptions.slice(0, 6).map((category) => (
               <Button

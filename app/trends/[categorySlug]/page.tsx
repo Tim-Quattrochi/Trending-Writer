@@ -53,24 +53,25 @@ function summarizeKeywords(articles: Article[]): number {
 export async function generateMetadata({
   params,
 }: {
-  params: CategoryPageParams;
+  params: Promise<CategoryPageParams>;
 }): Promise<Metadata> {
-  const data = await loadCategoryPageData(params.categorySlug);
+  const { categorySlug } = await params;
+  const data = await loadCategoryPageData(categorySlug);
 
   if (!data) {
     return {
-      title: "Category not found | Daily Oddities Dispatch",
-      description: "Browse all Daily Oddities dispatches across every category.",
+      title: "Category not found | Daily Oddities",
+      description: "Browse all Daily Oddities stories across every category.",
     };
   }
 
   const { category, articles } = data;
   const description =
     category.description?.trim() ||
-    `Fresh Daily Oddities dispatches for the ${category.name} beat.`;
+    `Fresh Daily Oddities stories for the ${category.name} beat.`;
 
   return {
-    title: `${category.name} dispatches | Daily Oddities`,
+    title: `${category.name} stories | Daily Oddities`,
     description: `${description} (${articles.length} stories).`,
   };
 }
@@ -78,9 +79,10 @@ export async function generateMetadata({
 export default async function CategoryPage({
   params,
 }: {
-  params: CategoryPageParams;
+  params: Promise<CategoryPageParams>;
 }) {
-  const data = await loadCategoryPageData(params.categorySlug);
+  const { categorySlug } = await params;
+  const data = await loadCategoryPageData(categorySlug);
 
   if (!data) {
     notFound();
@@ -103,7 +105,7 @@ export default async function CategoryPage({
             </h1>
             <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
               {category.description?.trim() ||
-                "A focused feed of cultural blips, micro-trends, and whimsical dispatches pulled from today’s Google Trends pulse."}
+                "A focused feed of cultural blips, micro-trends, and whimsical stories sourced from today&apos;s internet pulse."}
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-sm">
@@ -119,13 +121,13 @@ export default async function CategoryPage({
               <span className="text-3xl font-semibold capitalize">
                 {category.slug}
               </span>
-              <span className="text-sm">Slug ready</span>
+              <span className="text-sm">Shareable shortcut</span>
             </div>
           </div>
           <div className="flex flex-wrap gap-3 text-sm">
             <Button asChild variant="default" className="gap-2">
               <Link href="/articles">
-                Browse all dispatches
+                Browse all stories
                 <ArrowLeft className="h-4 w-4 rotate-180" />
               </Link>
             </Button>
@@ -148,18 +150,18 @@ export default async function CategoryPage({
               <div className="flex items-center gap-3 rounded-2xl border bg-background/80 px-4 py-3">
                 <Layers className="h-4 w-4 text-primary" />
                 <div>
-                  <p className="text-foreground">Canonical slug</p>
+                  <p className="text-foreground">Category URL</p>
                   <p className="text-xs text-muted-foreground">/trends/{category.slug}</p>
                 </div>
               </div>
               <div className="rounded-2xl border bg-background/80 px-4 py-3">
-                <p className="text-foreground">Dispatch cadence</p>
+                <p className="text-foreground">Update cadence</p>
                 <p className="text-xs text-muted-foreground">
-                  Updated whenever the RSS workflow produces a {category.name} story.
+                  Updated whenever the publishing workflow produces a {category.name} story.
                 </p>
               </div>
               <div className="rounded-2xl border border-dashed bg-background/60 px-4 py-4 text-xs">
-                <p className="font-semibold text-foreground">Share link</p>
+                <p className="font-semibold text-foreground">Copy &amp; share</p>
                 <p className="break-all text-muted-foreground">
                   {`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://trendingwriters.com"}/trends/${category.slug}`}
                 </p>
@@ -174,12 +176,12 @@ export default async function CategoryPage({
       ) : (
         <div className="rounded-3xl border border-dashed bg-muted/40 p-12 text-center">
           <Ghost className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold">No dispatches yet</h2>
+          <h2 className="text-2xl font-semibold">No stories yet</h2>
           <p className="mt-2 text-muted-foreground">
             The Daily Oddities workflow hasn’t published any stories for this category yet.
           </p>
           <Button asChild className="mt-6">
-            <Link href="/articles">Browse all dispatches</Link>
+            <Link href="/articles">Browse all stories</Link>
           </Button>
         </div>
       )}

@@ -74,7 +74,7 @@ export default async function LandingPage() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary">
                 <Zap className="h-3.5 w-3.5" />
-                Fresh from Google Trends
+                Fresh from today&apos;s internet
               </div>
 
               <h1 className="text-3xl font-bold leading-tight tracking-tight lg:text-5xl lg:leading-[1.1]">
@@ -110,7 +110,7 @@ export default async function LandingPage() {
                     <strong className="text-foreground">
                       {articles.length > 0 ? "35+" : "Daily"}
                     </strong>{" "}
-                    fresh dispatches
+                    fresh stories
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -177,7 +177,7 @@ export default async function LandingPage() {
             <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
-                  Latest Dispatches
+                  Latest Stories
                 </p>
                 <h2 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   What&apos;s catching eyes today
@@ -279,7 +279,7 @@ export default async function LandingPage() {
                 Join the Daily Oddities community
               </h2>
               <p className="mb-6 text-muted-foreground">
-                Get the full experience. Access all dispatches, personalized
+                Get the full experience. Access every article, personalized
                 feeds, and be first to catch the latest internet curiosities.
               </p>
               <div className="flex flex-wrap justify-center gap-3">

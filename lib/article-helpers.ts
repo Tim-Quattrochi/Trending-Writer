@@ -41,7 +41,7 @@ export function mapArticle(record: ArticleQueryResult): Article {
 
   return {
     ...record,
-    title: record.title ?? "Untitled Dispatch",
+    title: record.title ?? "Untitled Article",
     summary: record.summary ?? "",
     categories,
     primaryCategorySlug: primaryCategory?.slug ?? DEFAULT_CATEGORY_SLUG,

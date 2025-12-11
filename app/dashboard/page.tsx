@@ -110,10 +110,15 @@ export default async function Dashboard({
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-3xl font-bold flex items-center gap-4">
-            <UpdateTrendsButton />
-            <span className="leading-tight">Trending Topics Dashboard</span>
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-4">
+              <UpdateTrendsButton />
+              <span className="leading-tight">Trending Topics Dashboard</span>
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Monitor what&apos;s spiking right now and open articles that are ready to share or edit.
+            </p>
+          </div>
         </div>
         <Separator />
         <Tabs defaultValue="trends" className="w-full">

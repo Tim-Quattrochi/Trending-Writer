@@ -19,9 +19,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Daily Oddities Dispatch",
+  title: "Daily Oddities",
   description:
-    "A modern chronicle of quirky, strange, and humorous stories sourced from the Daily Oddities community and Google Trends.",
+    "A modern chronicle of quirky, strange, and humorous stories sourced from the Daily Oddities community.",
 };
 
 export default function RootLayout({
@@ -66,7 +66,7 @@ export default function RootLayout({
                     Daily Oddities · Curious signals from the social ether
                   </p>
                   <p>
-                    Built with Google Trends, Supabase, and a pinch of Daily
+                    Built with Supabase, modern AI helpers, and a pinch of Daily
                     Oddities humor.
                   </p>
                 </div>
