@@ -355,6 +355,13 @@ export async function POST(req: Request) {
     );
   }
 
+  // Extract and validate trend_id - it should link article to its source trend
+  const trendId = body.trendData.trend_id ?? body.trendData.trendId ?? body.trend_id ?? null;
+  
+  if (!trendId) {
+    console.warn("Creating article without trend_id - article will not be linked to a trend");
+  }
+
   try {
     const supabase = await createClient();
     const prompt = `
@@ -413,7 +420,7 @@ export async function POST(req: Request) {
       .from("articles")
       .insert([
         {
-          trend_id: body.trendData.trend_id,
+          trend_id: trendId,
           topic: body.topic,
           title: object.title,
           content: formattedContent,

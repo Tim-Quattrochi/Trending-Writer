@@ -8,11 +8,21 @@ export interface Category {
   updated_at?: string;
 }
 
+export interface Trend {
+  id: number;
+  title: string | null;
+  approx_traffic: string | null;
+  publication_date: string | null;
+  news_items: string | null;
+  stored_image_url: string | null;
+}
+
 export interface Article {
   id: number;
   title: string;
   content: string;
   trend_id?: number | null;
+  trend?: Trend | null;
   created_at?: string | null;
   updated_at?: string | null;
   published_at?: string | null;

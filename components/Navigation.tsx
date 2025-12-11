@@ -81,6 +81,7 @@ export default function Navigation() {
   }, []);
 
   const navLinks = [
+    { href: "/trends", label: "Trending" },
     { href: "/articles", label: "Stories" },
     ...(isLoggedIn ? [{ href: "/dashboard", label: "Dashboard" }] : []),
   ];

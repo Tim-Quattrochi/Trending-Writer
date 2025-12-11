@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { Clock, ArrowRight } from "lucide-react";
+import { Clock, ArrowRight, TrendingUp } from "lucide-react";
 import { Article } from "@/app/api/articles/article.types";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -194,11 +194,17 @@ export default function ArticleCard({
 
           {/* Footer */}
           <div className="mt-auto flex items-center justify-between pt-3">
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" />
                 {readingTime} min
               </span>
+              {article.trend?.approx_traffic && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-950 dark:text-orange-400">
+                  <TrendingUp className="h-3 w-3" />
+                  {article.trend.approx_traffic}
+                </span>
+              )}
               {keywords.slice(0, 1).map((keyword) => (
                 <Badge
                   key={keyword}

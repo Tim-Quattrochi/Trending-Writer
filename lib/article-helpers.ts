@@ -1,4 +1,4 @@
-import { Article, Category } from "@/app/api/articles/article.types";
+import { Article, Category, Trend } from "@/app/api/articles/article.types";
 import { Database } from "@/types/types_db";
 
 export const DEFAULT_CATEGORY_SLUG = "oddities";
@@ -8,6 +8,14 @@ export const ARTICLE_WITH_CATEGORIES = `
   *,
   article_categories:article_categories (
     categories:categories (*)
+  ),
+  trend:trends (
+    id,
+    title,
+    approx_traffic,
+    publication_date,
+    news_items,
+    stored_image_url
   )
 `;
 
@@ -16,6 +24,7 @@ export type ArticleQueryResult =
     article_categories?: Array<{
       categories?: Database["public"]["Tables"]["categories"]["Row"] | null;
     }>;
+    trend?: Database["public"]["Tables"]["trends"]["Row"] | null;
   };
 
 function mapCategory(row: Database["public"]["Tables"]["categories"]["Row"]): Category {
@@ -30,6 +39,18 @@ function mapCategory(row: Database["public"]["Tables"]["categories"]["Row"]): Ca
   };
 }
 
+function mapTrend(row: Database["public"]["Tables"]["trends"]["Row"] | null): Trend | null {
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    approx_traffic: row.approx_traffic,
+    publication_date: row.publication_date,
+    news_items: row.news_items,
+    stored_image_url: row.stored_image_url,
+  };
+}
+
 export function mapArticle(record: ArticleQueryResult): Article {
   const categories =
     record.article_categories
@@ -38,12 +59,14 @@ export function mapArticle(record: ArticleQueryResult): Article {
       .map(mapCategory) ?? [];
 
   const primaryCategory = categories[0];
+  const trend = mapTrend(record.trend ?? null);
 
   return {
     ...record,
     title: record.title ?? "Untitled Article",
     summary: record.summary ?? "",
     categories,
+    trend,
     primaryCategorySlug: primaryCategory?.slug ?? DEFAULT_CATEGORY_SLUG,
     primaryCategoryName: primaryCategory?.name ?? DEFAULT_CATEGORY_NAME,
   };
