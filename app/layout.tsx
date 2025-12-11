@@ -61,14 +61,21 @@ export default function RootLayout({
 
               {/* Footer */}
               <footer className="mt-auto border-t bg-background/80 backdrop-blur-sm">
-                <div className="container mx-auto flex flex-col gap-2 px-4 py-6 text-xs text-muted-foreground lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:py-8 lg:text-sm">
-                  <p className="font-semibold tracking-wide text-foreground">
-                    Daily Oddities · Curious signals from the social ether
-                  </p>
-                  <p>
-                    Built with Supabase, modern AI helpers, and a pinch of Daily
-                    Oddities humor.
-                  </p>
+                <div className="container mx-auto px-4 py-8 lg:py-10">
+                  <div className="flex flex-col items-center gap-4 text-center text-sm text-muted-foreground lg:flex-row lg:justify-between lg:text-left">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        Daily Oddities
+                      </p>
+                      <p className="text-xs">
+                        Curious signals from the social ether
+                      </p>
+                    </div>
+                    <p className="text-xs">
+                      © {new Date().getFullYear()} Daily Oddities. Built with
+                      care.
+                    </p>
+                  </div>
                 </div>
               </footer>
 

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { Calendar, Clock, Sparkles } from "lucide-react";
+import { Clock, ArrowRight } from "lucide-react";
 import { Article } from "@/app/api/articles/article.types";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -23,10 +23,10 @@ interface ArticleCardProps {
 }
 
 const fallbackGradients = [
-  "from-[#fef3c7] via-[#fde68a] to-[#fbbf24]",
-  "from-[#fdf2f8] via-[#fbcfe8] to-[#f472b6]",
-  "from-[#ecfccb] via-[#d9f99d] to-[#bef264]",
-  "from-[#cffafe] via-[#a5f3fc] to-[#67e8f9]",
+  "from-amber-100 via-orange-100 to-rose-100",
+  "from-violet-100 via-purple-100 to-fuchsia-100",
+  "from-emerald-100 via-teal-100 to-cyan-100",
+  "from-sky-100 via-blue-100 to-indigo-100",
 ];
 
 function getReadingTime(content?: string) {
@@ -36,13 +36,42 @@ function getReadingTime(content?: string) {
   return Math.max(2, Math.ceil(words / wordsPerMinute));
 }
 
+/** Convert slug-style keywords to human-readable labels */
+function humanizeKeyword(keyword: string): string {
+  return keyword
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/\bAi\b/gi, "AI")
+    .replace(/\bUi\b/gi, "UI")
+    .replace(/\bUx\b/gi, "UX")
+    .trim();
+}
+
 function normalizeKeywords(keywords?: string[] | string | null) {
   if (!keywords) return [];
-  if (Array.isArray(keywords)) return keywords;
+  if (Array.isArray(keywords)) return keywords.map(humanizeKeyword);
   return keywords
     .split(",")
-    .map((keyword) => keyword.trim())
+    .map((keyword) => humanizeKeyword(keyword.trim()))
     .filter(Boolean);
+}
+
+function formatDate(dateString?: string | null): string {
+  if (!dateString) return "Recently";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffHours = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+  );
+
+  if (diffHours < 1) return "Just now";
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffHours < 48) return "Yesterday";
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export default function ArticleCard({
@@ -52,16 +81,10 @@ export default function ArticleCard({
   const router = useRouter();
   const readingTime = getReadingTime(article.content);
   const keywords = normalizeKeywords(article.meta_keywords);
-  const truncatedContent = article.content
-    ? `${article.content.slice(0, 180)}${
-        article.content.length > 180 ? "…" : ""
-      }`
-    : undefined;
   const description =
     article.summary ||
     article.meta_description ||
-    truncatedContent ||
-    "Freshly generated from the Daily Oddities feed.";
+    (article.content ? article.content.slice(0, 140) + "…" : "");
 
   const gradient = fallbackGradients[article.id % fallbackGradients.length];
   const href = getArticlePath(article);
@@ -79,113 +102,120 @@ export default function ArticleCard({
     <Link
       href={href}
       className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-4"
-      aria-label={`Read article ${article.title}`}
+      aria-label={`Read article: ${article.title}`}
     >
       <Card
         className={cn(
-          "group relative overflow-hidden border-border/70 bg-card/80 backdrop-blur transition shadow-sm hover:shadow-lg",
+          "group relative overflow-hidden border-border/50 bg-card transition-all hover:shadow-lg",
           variant === "featured"
-            ? "grid gap-8 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-10"
+            ? "grid gap-0 lg:grid-cols-[1.2fr_1fr]"
             : variant === "list"
-            ? "flex flex-col gap-4 p-6 sm:flex-row"
-            : "flex flex-col gap-5 p-6"
+              ? "flex flex-col gap-0 sm:flex-row"
+              : "flex flex-col"
         )}
       >
+        {/* Image */}
         <div
           className={cn(
-            "relative overflow-hidden rounded-2xl border border-border/60 bg-muted/40",
-            variant === "list" ? "sm:max-w-[280px] sm:flex-shrink-0" : "",
-            variant === "featured" && "lg:min-h-[360px]"
+            "relative overflow-hidden bg-muted",
+            variant === "list"
+              ? "aspect-[16/10] sm:aspect-square sm:w-48 sm:shrink-0"
+              : variant === "featured"
+                ? "aspect-[16/10] lg:aspect-auto lg:min-h-[380px]"
+                : "aspect-[16/10]"
           )}
         >
           {article.image_url ? (
             <Image
-              src={!article.image_url ? "/unnamed.jpg" : article.image_url}
+              src={article.image_url}
               alt={article.title}
-              width={900}
-              height={600}
-              className={cn(
-                "w-full object-cover transition duration-500 group-hover:scale-[1.03]",
-                variant === "featured" ? "h-full min-h-[320px]" : "h-48"
-              )}
+              fill
+              sizes={variant === "featured" ? "(max-width: 1024px) 100vw, 55vw" : variant === "list" ? "(max-width: 640px) 100vw, 192px" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"}
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
               priority={variant === "featured"}
             />
           ) : (
-            <div
-              className={cn(
-                "w-full bg-gradient-to-br",
-                gradient,
-                variant === "featured" ? "h-full min-h-[320px]" : "h-48"
-              )}
-            />
+            <div className={cn("h-full w-full bg-gradient-to-br", gradient)} />
           )}
-          <div className="absolute inset-x-3 bottom-3 flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow">
-            <Calendar className="h-3.5 w-3.5" />
-            <time dateTime={article.created_at || undefined}>
-              {article.created_at
-                ? new Date(article.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : "Recently"}
-            </time>
-          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleCategoryNavigation}
-                className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-                aria-label={`Browse ${categoryName} stories`}
+        {/* Content */}
+        <div
+          className={cn(
+            "flex flex-1 flex-col p-5",
+            variant === "featured" && "justify-center lg:p-8"
+          )}
+        >
+          {/* Meta row */}
+          <div className="mb-3 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleCategoryNavigation}
+              className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              aria-label={`Browse ${categoryName} stories`}
+            >
+              <Badge
+                variant="outline"
+                className="rounded-full border-primary/30 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary hover:bg-primary/10"
               >
-                <Badge
-                  variant="outline"
-                  className="rounded-full border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-primary"
-                >
-                  {categoryName}
-                </Badge>
-              </button>
-              <p className="eyebrow text-primary/70">Daily Oddities</p>
-            </div>
-            <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-              {article.title}
-            </h3>
-            <p className="text-base text-muted-foreground leading-relaxed">
+                {categoryName}
+              </Badge>
+            </button>
+            <span className="text-xs text-muted-foreground">
+              {formatDate(article.created_at)}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h3
+            className={cn(
+              "mb-2 font-semibold leading-snug tracking-tight text-foreground",
+              variant === "featured"
+                ? "text-xl lg:text-2xl"
+                : "line-clamp-2 text-base lg:text-lg"
+            )}
+          >
+            {article.title}
+          </h3>
+
+          {/* Description - only on featured and list variants */}
+          {(variant === "featured" || variant === "list") && description && (
+            <p
+              className={cn(
+                "mb-4 text-muted-foreground",
+                variant === "featured"
+                  ? "line-clamp-3 text-base"
+                  : "line-clamp-2 text-sm"
+              )}
+            >
               {description}
             </p>
-          </div>
+          )}
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1 rounded-full border bg-background/60 px-3 py-1 text-xs font-medium">
-              <Clock className="h-3.5 w-3.5" />
-              {readingTime} min read
-            </span>
-            {keywords.slice(0, 2).map((keyword) => (
-              <Badge
-                key={keyword}
-                variant="secondary"
-                className="rounded-full px-3 py-1 text-xs font-medium"
-              >
-                {keyword}
-              </Badge>
-            ))}
-            {keywords.length > 2 && (
-              <span className="text-xs text-muted-foreground">
-                +{keywords.length - 2} more
+          {/* Footer */}
+          <div className="mt-auto flex items-center justify-between pt-3">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                {readingTime} min
+              </span>
+              {keywords.slice(0, 1).map((keyword) => (
+                <Badge
+                  key={keyword}
+                  variant="secondary"
+                  className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                >
+                  {keyword}
+                </Badge>
+              ))}
+            </div>
+
+            {variant === "featured" && (
+              <span className="flex items-center gap-1.5 text-sm font-medium text-primary">
+                Read story
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </span>
             )}
-          </div>
-
-          <div className="flex items-center gap-3 text-sm font-medium text-primary">
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              Open story
-            </span>
-            <div className="h-px flex-1 bg-border/70" />
           </div>
         </div>
       </Card>

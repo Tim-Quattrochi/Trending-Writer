@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ChevronDown,
-  Compass,
-  LayoutDashboard,
-  Newspaper,
-  Sparkles,
-} from "lucide-react";
+import { ChevronDown, Compass, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "./mode-toggle";
 import { useEffect, useState } from "react";
@@ -19,7 +13,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
@@ -38,6 +31,7 @@ export default function Navigation() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [categoryLinks, setCategoryLinks] = useState<CategoryLink[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkUserAuth = async () => {
@@ -86,139 +80,80 @@ export default function Navigation() {
     };
   }, []);
 
-  const navItems = [
-    {
-      href: "/articles",
-      label: "Articles",
-      description: "Daily Oddities blog",
-      icon: Newspaper,
-      active: pathname === "/articles" || pathname.startsWith("/articles"),
-      requiresAuth: false,
-    },
-    {
-      href: "/dashboard",
-      label: "Dashboard",
-      description: "Manage trends",
-      icon: LayoutDashboard,
-      active: pathname === "/dashboard" || pathname.startsWith("/dashboard"),
-      requiresAuth: true,
-    },
+  const navLinks = [
+    { href: "/articles", label: "Stories" },
+    ...(isLoggedIn ? [{ href: "/dashboard", label: "Dashboard" }] : []),
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
-      <div className="container mx-auto flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-        {/* Logo / Brand */}
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {/* Logo */}
         <Link
           href="/"
-          className="inline-flex shrink-0 items-center gap-2.5 rounded-2xl border bg-card/95 px-3 py-2 shadow-sm transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary lg:h-10 lg:w-10">
-            <Compass className="h-4 w-4 lg:h-5 lg:w-5" aria-hidden="true" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Compass className="h-4 w-4" aria-hidden="true" />
           </span>
-          <span className="flex flex-col">
-            <span className="text-sm font-semibold leading-tight lg:text-base">
-              Daily Oddities
-            </span>
-            <span className="text-[11px] text-muted-foreground lg:text-xs">
-              Trends → Drafts → Facebook
-            </span>
-          </span>
+          <span className="font-semibold tracking-tight">Daily Oddities</span>
         </Link>
 
-        {/* Primary Navigation */}
+        {/* Desktop Navigation */}
         <nav
-          className="flex flex-wrap gap-2 lg:flex-1 lg:justify-center"
-          aria-label="Primary navigation"
-          role="navigation"
+          className="hidden items-center gap-1 md:flex"
+          aria-label="Main navigation"
         >
-          {navItems
-            .filter((item) => !item.requiresAuth || isLoggedIn)
-            .map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={item.active ? "page" : undefined}
-                className={cn(
-                  "flex min-w-0 flex-1 flex-col rounded-xl border px-3 py-2 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 lg:flex-none lg:px-4",
-                  item.active
-                    ? "border-primary/60 bg-primary/5 text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <span className="flex items-center gap-1.5 text-xs font-semibold lg:text-sm">
-                  <item.icon
-                    className="h-3.5 w-3.5 lg:h-4 lg:w-4"
-                    aria-hidden="true"
-                  />
-                  {item.label}
-                </span>
-                <span className="hidden text-[11px] text-muted-foreground lg:block lg:text-xs">
-                  {item.description}
-                </span>
-              </Link>
-            ))}
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                pathname === link.href || pathname.startsWith(link.href + "/")
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
 
+          {/* Categories Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                type="button"
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col rounded-xl border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 lg:flex-none lg:px-4",
+                  "flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
                   pathname.startsWith("/trends")
-                    ? "border-primary/60 bg-primary/5 text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <span className="flex items-center gap-1.5 text-xs font-semibold lg:text-sm">
-                  <Sparkles className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />
-                  Category hubs
-                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
-                </span>
-                <span className="hidden text-[11px] text-muted-foreground lg:flex lg:items-center lg:gap-1 lg:text-xs">
-                  {isLoadingCategories
-                    ? "Loading categories"
-                    : "Jump straight into curated beats"}
-                </span>
+                Categories
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72" align="center">
-              <DropdownMenuLabel className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Live hubs
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="center" className="w-56">
               {categoryLinks.length === 0 && !isLoadingCategories ? (
                 <DropdownMenuItem asChild>
-                  <Link href={`/trends/${DEFAULT_CATEGORY_SLUG}`} className="flex flex-col">
-                    <span className="font-medium">Oddities stream</span>
-                    <span className="text-xs text-muted-foreground">
-                      /trends/{DEFAULT_CATEGORY_SLUG}
-                    </span>
+                  <Link href={`/trends/${DEFAULT_CATEGORY_SLUG}`}>
+                    All Stories
                   </Link>
                 </DropdownMenuItem>
               ) : (
                 categoryLinks.map((category) => (
                   <DropdownMenuItem asChild key={category.id}>
-                    <Link
-                      href={`/trends/${category.slug}`}
-                      className="flex flex-col"
-                    >
-                      <span className="font-medium">{category.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        /trends/{category.slug}
-                      </span>
+                    <Link href={`/trends/${category.slug}`}>
+                      {category.name}
                     </Link>
                   </DropdownMenuItem>
                 ))
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link
-                  href="/articles#category-hubs"
-                  className="flex items-center justify-between text-primary"
-                >
-                  Explore all hubs
-                  <ChevronDown className="h-3 w-3 rotate-180" aria-hidden="true" />
+                <Link href="/articles" className="text-primary">
+                  View all stories →
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -226,22 +161,85 @@ export default function Navigation() {
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center justify-between gap-2 lg:justify-end">
-          {!isLoggedIn ? (
-            <Button
-              asChild
-              variant="default"
-              size="sm"
-              className="text-xs font-semibold lg:text-sm"
-            >
-              <Link href="/login">Sign in</Link>
-            </Button>
-          ) : (
-            <LogoutButton />
-          )}
+        <div className="flex items-center gap-2">
           <ModeToggle />
+          
+          {/* Desktop Auth */}
+          <div className="hidden md:block">
+            {!isLoggedIn ? (
+              <Button asChild size="sm">
+                <Link href="/login">Sign in</Link>
+              </Button>
+            ) : (
+              <LogoutButton />
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-lg border md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="border-t bg-background px-4 py-4 md:hidden">
+          <nav className="flex flex-col gap-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
+                  pathname === link.href || pathname.startsWith(link.href + "/")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            {/* Categories in Mobile */}
+            <div className="border-t pt-2 mt-2">
+              <p className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Categories
+              </p>
+              {categoryLinks.slice(0, 4).map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/trends/${category.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block rounded-lg px-4 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Mobile Auth */}
+            <div className="border-t pt-4 mt-2">
+              {!isLoggedIn ? (
+                <Button asChild className="w-full">
+                  <Link href="/login">Sign in</Link>
+                </Button>
+              ) : (
+                <LogoutButton />
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
